@@ -1,5 +1,6 @@
 # Example file for creating dataloaders
 
+import pandas as pd
 import torch
 import torchvision
 from sklearn.model_selection import train_test_split
@@ -50,3 +51,55 @@ def create_image_dataset(root_dir: str, transform = None):
     """
     image_folder = torchvision.datasets.ImageFolder(root_dir, transform = transform)
     return image_folder
+
+def create_linear_regression_dataset(csv_file: str):
+    class LinearRegressionDataset(Dataset):
+        def __init__(self, csv_file):
+            self.dataset = pd.read_csv(csv_file)
+            self.index_to_header = {i: self.dataset.columns[i] for i in range(self.dataset.columns)}
+            self.header_to_index = {self.dataset.columns[i]: i for i in range(self.dataset.columns)}
+
+        def __len__(self):
+            return len(self.dataset)
+
+        def __getitem__(self, index):
+            return self.dataset[index, :]
+    
+    return LinearRegressionDataset(csv_file)
+
+def create_logistic_regression_dataset(csv_file: str, class_header: str | int):
+    class LogisticRegressionDataset(Dataset):
+        def __init__(self, csv_file, class_header):
+            self.dataset = pd.read_csv(csv_file)
+            
+            self.set_classes(class_header)
+            
+        def __len__(self):
+            return len(self.labels)
+        
+        def __getitem__(self, index):
+            return (self.dataset[index, :], self.labels[index])
+        
+        def set_classes(self, class_header):
+            if isinstance(class_header, str):
+                if class_header not in self.dataset.columns:
+                    raise HeaderError("Incorrect header of str type. Please check header input value")
+                
+                self.classes = self.dataset[class_header].unique()
+                self.labels = self.dataset[self.dataset.columns[class_header]]
+                self.dataset = self.dataset.drop(class_header, axis = 1)
+
+            elif isinstance(class_header, int):
+                if class_header > len(self.dataset) or class_header < 0:
+                    raise HeaderError("Incorrect header of int type. Please check header input value")
+                
+                self.classes= self.dataset[self.dataset.columns[class_header]].unique()
+                self.labels = self.dataset[self.dataset.columns[class_header]]
+                self.dataset = self.dataset.drop(self.dataset.columns[class_header], axis = 1)
+            
+            else:
+                raise HeaderError(f"Incorrect header given with type {type(class_header)}. Header must be given as an integer or string")
+    
+    return LogisticRegressionDataset(csv_file, class_header)
+
+class HeaderError(Exception): pass
