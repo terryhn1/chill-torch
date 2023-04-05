@@ -39,7 +39,7 @@ def select_mode(problem_type: str):
         problem_type: string indicating the mode selected
     """
     if problem_type not in PROBLEM_TYPES:
-        raise ProblemTypeException(f"Incorrect problem type given. Please choose from the following:\n{problem_types}")
+        raise ProblemTypeException(f"Incorrect problem type given. Please choose from the following:\n{PROBLEM_TYPES}")
 
     else:
         return problem_type
@@ -49,8 +49,8 @@ def select_model(model: nn.module, problem_type: str, custom: bool = False):
 
         Args:
         model: torch module that includes all its layers
-        problem_type: pretrained
-        pretrained: boolean that determines whether the feature extraction should occur instead
+        problem_type: choice of problem. e.g. 'binary-class', 'lin-reg'
+        custom(optional): determinant of using specific model training. default is false.
     """
     if problem_type == "binary-class" and not custom:
         return lm.BinaryClassificationModel(model)
