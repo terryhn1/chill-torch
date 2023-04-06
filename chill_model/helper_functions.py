@@ -56,7 +56,7 @@ def select_model(model: nn.Module, problem_type: str, custom: bool = False):
         return lm.BinaryClassificationModel(model)
     elif problem_type == "binary-class" and custom:
         return lm.CustomBinaryClassificationModel(model)
-    elif problem_type == "lin-reg" and not custom:
+    elif problem_type == "lin-reg":
         return lm.LinearRegressionModel(model)
 
 class ProblemTypeException(Exception): pass
