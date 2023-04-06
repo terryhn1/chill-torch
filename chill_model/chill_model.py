@@ -5,8 +5,8 @@ from . import helper_functions
 class ChillModel:
     def __init__(self,
                  model: nn.Module,
-                 train_dataloader: torch.utils.data.Dataloader,
-                 test_dataloader: torch.utils.data.Dataloader,
+                 train_dataloader: torch.utils.data.DataLoader,
+                 test_dataloader: torch.utils.data.DataLoader,
                  problem_type: str,
                  is_custom: bool):
         """ Creates an instance of ChillModel. 
