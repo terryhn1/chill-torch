@@ -4,7 +4,11 @@ import torchmetrics
 from torch import nn
 
 class CustomBinaryClassificationModel(pl.LightningModule):
-    def __init__(self, model: nn.Module, optim: nn.Module = None, lr: float = 1e-3):
+    def __init__(self,
+                 model: nn.Module,
+                 optim: nn.Module = None,
+                 forward_override: bool = False,
+                 lr: float = 1e-3):
         """
             Creates a simple classification model.
 
@@ -15,6 +19,8 @@ class CustomBinaryClassificationModel(pl.LightningModule):
         self.layers = list(model.children())
         self.accuracy = torchmetrics.Accuracy()
         self.optim = optim
+        self.forward_override = forward_override
+        self.torch_forward = model.forward
         self.lr = lr
     
     def training_step(self, batch, batch_idx):
@@ -43,6 +49,8 @@ class CustomBinaryClassificationModel(pl.LightningModule):
         return optim
     
     def forward(self, x):
+        if self.forward_override:
+            return self.torch_forward(x)
         for layer in self.layers:
             x = layer(x)
         return torch.softmax(x, dim = 1)
