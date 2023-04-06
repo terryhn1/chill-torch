@@ -11,8 +11,6 @@ import os
 from typing import Dict, Union
 
 def create_dataloaders(dataset: Dataset,
-                       train_transform = None,
-                       test_transform = None,
                        batch_size: int = 1,
                        collate_fn = None,
                        train_split: float = 0.8) -> Dict[str, DataLoader]:
@@ -21,8 +19,6 @@ def create_dataloaders(dataset: Dataset,
 
         Args:
             dataset: custom dataset or pytorch dataset.
-            train_transform: function or collection of PyTorch transforms for train
-            test_transform: function or collection of PyTorch transforms for test
             batch_size(optional): Default value is 1. Batch size must be larger than the number of CPUs available
             collate_fn(optional): function to process each batch uniquely
             train_split: Float ranging (0,1). Default is set to 0.8
@@ -35,14 +31,12 @@ def create_dataloaders(dataset: Dataset,
     train_dataloader = DataLoader(train_dataset,
                                   batch_size = batch_size,
                                   shuffle = True,
-                                  transform = train_transform,
                                   num_workers = os.cpu_count(),
                                   collate_fn = collate_fn)
 
     test_data_loader = DataLoader(test_dataset,
                                   batch_size = batch_size,
                                   shuffle = False,
-                                  transform = test_transform,
                                   num_workers = os.cpu_count(),
                                   collate_fn = collate_fn)
 
