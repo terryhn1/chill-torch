@@ -1,11 +1,13 @@
 # Example file for creating dataloaders
 
 import pandas as pd
+import numpy as np
+from sklearn import preprocessing
+from sklearn.model_selection import train_test_split
 import torch
 import torchvision
-from sklearn.model_selection import train_test_split
-import os
 from torch.utils.data import Dataset, Subset, DataLoader
+import os
 from typing import Dict
 
 def create_dataloaders(dataset: Dataset,
@@ -63,7 +65,7 @@ def create_linear_regression_dataset(csv_file: str):
             return len(self.dataset)
 
         def __getitem__(self, index):
-            return self.dataset[index, :]
+            return torch.tensor(self.dataset.iloc[index, :].values, dtype = torch.float32)
     
     return LinearRegressionDataset(csv_file)
 
@@ -71,35 +73,45 @@ def create_logistic_regression_dataset(csv_file: str, class_header: str | int):
     class LogisticRegressionDataset(Dataset):
         def __init__(self, csv_file, class_header):
             self.dataset = pd.read_csv(csv_file)
-            
-            self.set_classes(class_header)
+            self._set_classes(class_header)
+            self._encode_string_values()
             
         def __len__(self):
             return len(self.labels)
         
         def __getitem__(self, index):
-            return (self.dataset[index, :], self.labels[index])
+            return (torch.tensor(self.dataset.iloc[index, :], dtype = torch.float32), self.labels[index])
         
-        def set_classes(self, class_header):
+        def _set_classes(self, class_header):
             if isinstance(class_header, str):
                 if class_header not in self.dataset.columns:
                     raise HeaderError("Incorrect header of str type. Please check header input value")
                 
-                self.classes = self.dataset[class_header].unique()
-                self.labels = self.dataset[self.dataset.columns[class_header]]
-                self.dataset = self.dataset.drop(class_header, axis = 1)
-
             elif isinstance(class_header, int):
                 if class_header > len(self.dataset) or class_header < 0:
                     raise HeaderError("Incorrect header of int type. Please check header input value")
                 
-                self.classes= self.dataset[self.dataset.columns[class_header]].unique()
-                self.labels = self.dataset[self.dataset.columns[class_header]]
-                self.dataset = self.dataset.drop(self.dataset.columns[class_header], axis = 1)
-            
+                class_header = self.dataset.columns[class_header]
+
             else:
                 raise HeaderError(f"Incorrect header given with type {type(class_header)}. Header must be given as an integer or string")
+            
+            self.classes = self.dataset[class_header].unique()
+            label_encoder = preprocessing.LabelEncoder()
+            label_encoder.fit(self.classes)
+            self.labels = label_encoder.transform(self.dataset[self.dataset[class_header]])
+            self.label_to_class = {i: label_encoder.inverse_transform([i])[0] for i in label_encoder.transform(self.classes)}
+            self.dataset = self.dataset.drop(class_header, axis = 1)
     
+        def _encode_string_values(self):
+            for i in range(len(self.dataset.columns)):
+                column = self.dataset.iloc[:, i]
+                if not isinstance(column[0], int) and not isinstance(column[0], float):
+                    label_encoder = preprocessing.LabelEncoder()
+                    label_encoder.fit(column)
+                    self.dataset.iloc[:, i] = label_encoder.transform(column)
+            
+
     return LogisticRegressionDataset(csv_file, class_header)
 
 class HeaderError(Exception): pass
