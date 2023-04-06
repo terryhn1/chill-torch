@@ -4,7 +4,7 @@ import torchmetrics
 from torch import nn
 
 class CustomBinaryClassificationModel(pl.LightningModule):
-    def __init__(self, model: nn.module, optim: nn.module = None, lr: float = 1e-3):
+    def __init__(self, model: nn.Module, optim: nn.Module = None, lr: float = 1e-3):
         """
             Creates a simple classification model.
 
@@ -48,7 +48,7 @@ class CustomBinaryClassificationModel(pl.LightningModule):
         return torch.softmax(x, dim = 1)
 
 class BinaryClassificationModel(pl.LightningModule):
-    def __init__(self, model: nn.module, is_pretrained: bool):
+    def __init__(self, model: nn.Module, is_pretrained: bool):
         super().__init__()
         layers = model.children()
         pass
