@@ -54,8 +54,22 @@ class BinaryClassificationModel(pl.LightningModule):
         pass
 
 class LinearRegressionModel(pl.LightningModule):
-    def __init__(self, model):
+    def __init__(self, model, forward_override: bool = False, lr: float = 1e-3):
         super().__init__()
+        self.lr = lr
+        self.forward_override = forward_override
+        self.torch_forward = model.forward
+        self.layers = list(model.children())
+
+    def configure_optimizer(self):
+        return torch.optim.SGD(parameters = self.parameters(), lr = self.lr)
+
+    def forward(self, x):
+        if self.forward_override:
+            return self.torch_forward(x)
         
-        pass
+        for layer in self.layers:
+            x = layer(x)
+        return x
+        
 
