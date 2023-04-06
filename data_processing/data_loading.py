@@ -55,6 +55,13 @@ def create_image_dataset(root_dir: str, transform = None):
     return image_folder
 
 def create_linear_regression_dataset(csv_file: str):
+    """ Uses a csv file to create a dataset that does not include labeling.
+        Only use if looking for solving linear regression problems with deep learning.
+
+        Args:
+            csv_file: a direct file path to the csv file. Cannot include non-ASCII characters.
+    
+    """
     class LinearRegressionDataset(Dataset):
         def __init__(self, csv_file):
             self.dataset = pd.read_csv(csv_file)
@@ -70,6 +77,14 @@ def create_linear_regression_dataset(csv_file: str):
     return LinearRegressionDataset(csv_file)
 
 def create_logistic_regression_dataset(csv_file: str, class_header: str | int):
+    """ Uses a csv file to create a dataset that includes labeling capability.
+        Transforms non-numerical values to numerical to generate tensors.
+
+        Args:
+            csv_file: a direct file path to the csv file. Cannot include non-ASCII characters.
+            class_header: class selected as labeling basis. Must be an integer or string. 
+    
+    """
     class LogisticRegressionDataset(Dataset):
         def __init__(self, csv_file, class_header):
             self.dataset = pd.read_csv(csv_file)
