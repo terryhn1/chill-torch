@@ -1,7 +1,6 @@
 import torch
 from torch import nn
-import helper_functions
-from chill_loader import ChillLoader
+from . import helper_functions
 
 class ChillModel:
     def __init__(self,

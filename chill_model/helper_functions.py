@@ -1,6 +1,6 @@
 import torch
 from torch import nn
-from chill_lightning import lightning_models as lm
+from chill_model.chill_lightning import lightning_models as lm
 
 PROBLEM_TYPES = ["lin-reg", "binary-class", "multi-class"]
 
