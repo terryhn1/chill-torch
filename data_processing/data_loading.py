@@ -8,7 +8,7 @@ import torch
 import torchvision
 from torch.utils.data import Dataset, Subset, DataLoader
 import os
-from typing import Dict
+from typing import Dict, Union
 
 def create_dataloaders(dataset: Dataset,
                        train_transform = None,
@@ -76,7 +76,7 @@ def create_linear_regression_dataset(csv_file: str):
     
     return LinearRegressionDataset(csv_file)
 
-def create_logistic_regression_dataset(csv_file: str, class_header: str | int):
+def create_logistic_regression_dataset(csv_file: str, class_header: Union[int, str]):
     """ Uses a csv file to create a dataset that includes labeling capability.
         Transforms non-numerical values to numerical to generate tensors.
 
