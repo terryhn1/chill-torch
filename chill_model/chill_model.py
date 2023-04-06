@@ -4,7 +4,7 @@ from . import helper_functions
 
 class ChillModel:
     def __init__(self,
-                 model: nn.module,
+                 model: nn.Module,
                  train_dataloader: torch.utils.data.Dataloader,
                  test_dataloader: torch.utils.data.Dataloader,
                  problem_type: str,
