@@ -65,8 +65,8 @@ def create_linear_regression_dataset(csv_file: str):
     class LinearRegressionDataset(Dataset):
         def __init__(self, csv_file):
             self.dataset = pd.read_csv(csv_file)
-            self.index_to_header = {i: self.dataset.columns[i] for i in range(self.dataset.columns)}
-            self.header_to_index = {self.dataset.columns[i]: i for i in range(self.dataset.columns)}
+            self.index_to_header = {i: val for i, val in enumerate(self.dataset.columns)}
+            self.header_to_index = {val: i for i, val in enumerate(self.dataset.columns)}
 
         def __len__(self):
             return len(self.dataset)
