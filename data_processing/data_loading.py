@@ -15,7 +15,7 @@ def create_dataloaders(dataset: Dataset,
                        test_transform = None,
                        batch_size: int = 1,
                        collate_fn = None,
-                       train_split: float = 0.8) -> Dict[DataLoader]:
+                       train_split: float = 0.8) -> Dict[str, DataLoader]:
     """ Turns a given dataset into train and dataloaders.
         Validation dataset for cross-validation is not an option for this function at the moment.
 
