@@ -44,7 +44,7 @@ def select_mode(problem_type: str):
     else:
         return problem_type
 
-def select_model(model: nn.module, problem_type: str, custom: bool = False):
+def select_model(model: nn.Module, problem_type: str, custom: bool = False):
     """ Given the problem_type, creates a Lightning Model and returns it.
 
         Args:
