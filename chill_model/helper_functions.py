@@ -2,7 +2,7 @@ import torch
 from torch import nn
 from chill_torch.chill_model.chill_lightning import lightning_models as lm
 
-PROBLEM_TYPES = ["linear-regression", "reg-classification", "img-classification"]
+PROBLEM_TYPES = ["lin-reg", "reg-class", "img-class"]
 
 def declare_data_issues(train_data: torch.utils.data.DataLoader,
                         test_data: torch.utils.data.DataLoader,
@@ -56,17 +56,17 @@ def select_model(model: nn.Module,
             problem_type: choice of problem.
             custom(optional): determinant of using specific model training. default is false.
     """
-    if problem_type == "reg-classification":
+    if problem_type == "reg-class":
         return lm.RegularClassificationModel(model = model,
                                                    forward_override = custom,
                                                    optim = optim,
                                                    lr = lr)
-    elif problem_type == 'img-classification':
+    elif problem_type == "img-class":
         return lm.ImageClassificationModel(model = model,
                                                  forward_override = custom,
                                                  optim = optim,
                                                  lr = lr)
-    elif problem_type == "linear-regression":
+    elif problem_type == "lin-reg":
         return lm.LinearRegressionModel(model = model,
                                         forward_override = custom,
                                         optim = optim,

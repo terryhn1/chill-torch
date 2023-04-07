@@ -15,8 +15,12 @@ class ChillModel:
                  optim: nn.Module = None,
                  valid_dataloader: DataLoader = None,
                  lr: float = 1e-3):
-        """ Creates an instance of ChillModel. 
-            Currently available problem types: [lin-reg, multi-class, binary-class]
+        """ 
+            Args:
+                model: Torch model with layers initialized. 
+                train_dataloader: Dataloader that can be received from using data_loading.py
+                test_dataloader: Dataloader that can be received from using data_loading.py
+                problem_type: Accepts problems types from [lin-reg, img-class, reg-class]
         """
         self.train_dataloader = train_dataloader
         self.test_dataloader = test_dataloader
@@ -39,7 +43,7 @@ class ChillModel:
     def validate(self):
         if self.valid_dataloader:
             trainer = pl.Trainer()
-            trainer.test(self.model, self.train_dataloader, self.valid_dataloader)
+            trainer.validate(self.model, self.valid_dataloader)
         else:
             raise DataLoaderError("No dataloader initialized. Use model.set_valid_dataloader() to initialize")
     
