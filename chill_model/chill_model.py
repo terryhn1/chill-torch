@@ -21,6 +21,10 @@ class ChillModel:
                 train_dataloader: Dataloader that can be received from using data_loading.py
                 test_dataloader: Dataloader that can be received from using data_loading.py
                 problem_type: Accepts problems types from [lin-reg, img-class, reg-class]
+                forward_override (optional): If true, forward function must be created in model for custom propagation
+                optim (optional): Custom optimizer for problem. If none given, pre-established optimizer for specific problems used.
+                pretrained (optional): Necessary for feature extraction.
+                lr (optional): Learning rate. Must be given as a float. Default is 0.001.
         """
         self.train_dataloader = train_dataloader
         self.test_dataloader = test_dataloader
@@ -45,7 +49,15 @@ class ChillModel:
     
     def predict(self, predict_dataloader: DataLoader):
         preds = self.trainer.predict(dataloaders = predict_dataloader)
+        self.preds = preds
         return preds
+
+    def convert_predictions(self, labels_to_classes: dict):
+        """ Converts labels back to classes depending on the predictions.
+            If custom dataset, use dataset.label_to_class.
+            If torch dataset, use dataset.classes and convert with label encoding separately.
+        """
+        return [labels_to_classes[self.preds[i]] for i in self.preds]
             
 
 class DataLoaderError(Exception): pass
