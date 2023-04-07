@@ -4,22 +4,32 @@ import torchmetrics
 from torch import nn
 
 class RegularClassificationModel(pl.LightningModule):
+    """ Supports binary and multi-class classification.
+        Multi-labelling in the process.
+    """
     def __init__(self,
                  model: nn.Module,
                  number_of_classes: int,
+                 task: str,
                  optim: nn.Module = None,
                  forward_override: bool = False,
                  lr: float = 1e-3):
         """
-            Creates a simple classification model.
+            Creates a simple classification model - does not support image classification.
 
             Args:
-            model: torch module with layers built from Sequential blocks
-            optim: torch optimizer. default is Adam 
+                model: Torch module with layers built from Sequential blocks
+                number_of_classes: Input for accuracy metric.
+                task: Accepts any of the following values - ['binary','multiclass']
+                optim: Torch optimizer. default is Adam
+                forward_override (optional): True to use your own forward function from model.
+                lr: Learning rate given as a float. Default is 0.001 
+
         """
         self.layers = list(model.children())
         self.number_of_classes = number_of_classes
-        self.accuracy = torchmetrics.Accuracy()
+        self.task = task
+        self.accuracy = torchmetrics.Accuracy(task = self.task, num_classes = number_of_classes)
         self.optim = optim
         self.forward_override = forward_override
         self.torch_forward = model.forward
@@ -28,22 +38,38 @@ class RegularClassificationModel(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         x, y = batch
         y_logits = self.forward(x).squeeze()
-        if self.number_of_classes == 2:
+        
+        if self.task == 'binary':
+            y_preds = torch.round(torch.sigmoid(y_logits))
             loss = torch.nn.BCEWithLogitsLoss(y_logits, y)
-        elif self.number_of_classes > 2:
+
+        elif self.task == 'multiclass':
+            y_preds = torch.argmax(y_logits, dim = 1)
             loss = torch.nn.CrossEntropyLoss(y_logits, y)
+        
+        self.accuracy(y_preds, y)
+        self.log('train_acc_step', self.accuracy)
         
         return {"loss": loss, "log": self.log}
     
     def training_epoch_end(self, outs):
-        self.log('train_acc_epoch', self.accuracy.compute())
+        self.log('train_acc_epoch', self.accuracy)
     
     def validation_step(self, batch, batch_idx):
         x, y = batch
 
         y_logits = self.forward(x).squeeze()
-        val_loss = torch.nn.BCEWithLogitsLoss(y_logits, y)
-        self.log('val_acc_step', self.accuracy(y_logits, y))
+
+        if self.task == 'binary':
+            y_preds = torch.round(torch.sigmoid(y_logits))
+            val_loss = torch.nn.BCEWithLogitsLoss(y_logits, y)
+
+        elif self.task == 'multiclass':
+            y_preds = torch.argmax(y_logits, dim = 1)
+            val_loss = torch.nn.CrossEntropyLoss(y_logits, y)
+        
+        self.accuracy(y_preds, y)
+        self.log('val_acc_step', self.accuracy)
         self.log('val_loss', val_loss)
     
     def configure_optimizer(self):
@@ -51,15 +77,18 @@ class RegularClassificationModel(pl.LightningModule):
             optim = torch.nn.Adam(parameters = self.parameters(), lr = self.lr)
         else:
             optim = self.custom_optim(parameters = self.parameters(), lr = self.lr)
-        return optim
+        lr_scheduler = torch.optim.lr_scheduler.StepLR(optim, step_size = 1)
+        return [optim], [lr_scheduler]
     
     def forward(self, x):
         if self.forward_override:
             return self.torch_forward(x)
-
+        
+        # Forward pass through all the layers
         for layer in self.layers:
             x = layer(x)
-        return torch.softmax(x, dim = 1)
+        
+        return x
 
 class LinearRegressionModel(pl.LightningModule):
     def __init__(self, model: nn.Module, forward_override: bool = False, lr: float = 1e-3):
