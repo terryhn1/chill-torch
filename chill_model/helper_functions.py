@@ -2,7 +2,7 @@ import torch
 from torch import nn
 from chill_torch.chill_model.chill_lightning import lightning_models as lm
 
-PROBLEM_TYPES = ["lin-reg", "binary-class", "multi-class"]
+PROBLEM_TYPES = ["linear-regression", "reg-classification", "img-classification"]
 
 def declare_data_issues(train_data: torch.utils.data.DataLoader,
                         test_data: torch.utils.data.DataLoader,
@@ -10,9 +10,9 @@ def declare_data_issues(train_data: torch.utils.data.DataLoader,
     """ Informs user of potential of bad data before training and reccommends labelled changes.
 
         Args:
-        train_data: torch dataloader containing the data for training
-        test_data: torch dataloader containing the data for testing
-        number_of_classes(optional): used only for classification problems
+            train_data: torch dataloader containing the data for training
+            test_data: torch dataloader containing the data for testing
+            number_of_classes(optional): used only for classification problems
 
     """
 
@@ -25,7 +25,7 @@ def declare_data_issues(train_data: torch.utils.data.DataLoader,
     elif split < 0.6:
         print("consider raising the split to avoid underfitting")
     
-    if number_of_classes is not None:
+    if number_of_classes:
         # Reviewing for Recall/Precision/F1 Score
         # TO-DO
         pass
@@ -36,7 +36,7 @@ def select_mode(problem_type: str):
     """ Returns the mode for ChillModel given a correct problem_type.
 
         Args:
-        problem_type: string indicating the mode selected
+            problem_type: string indicating the mode selected
     """
     if problem_type not in PROBLEM_TYPES:
         raise ProblemTypeException(f"Incorrect problem type given. Please choose from the following:\n{PROBLEM_TYPES}")
@@ -44,19 +44,32 @@ def select_mode(problem_type: str):
     else:
         return problem_type
 
-def select_model(model: nn.Module, problem_type: str, custom: bool = False):
+def select_model(model: nn.Module,
+                 problem_type: str,
+                 optim: nn.Module,
+                 lr: float,
+                 custom: bool = False):
     """ Given the problem_type, creates a Lightning Model and returns it.
 
         Args:
-        model: torch module that includes all its layers
-        problem_type: choice of problem. e.g. 'binary-class', 'lin-reg'
-        custom(optional): determinant of using specific model training. default is false.
+            model: torch module that includes all its layers
+            problem_type: choice of problem.
+            custom(optional): determinant of using specific model training. default is false.
     """
-    if problem_type == "binary-class" and not custom:
-        return lm.BinaryClassificationModel(model)
-    elif problem_type == "binary-class" and custom:
-        return lm.CustomBinaryClassificationModel(model)
-    elif problem_type == "lin-reg":
-        return lm.LinearRegressionModel(model)
+    if problem_type == "reg-classification":
+        return lm.RegularClassificationModel(model = model,
+                                                   forward_override = custom,
+                                                   optim = optim,
+                                                   lr = lr)
+    elif problem_type == 'img-classification':
+        return lm.ImageClassificationModel(model = model,
+                                                 forward_override = custom,
+                                                 optim = optim,
+                                                 lr = lr)
+    elif problem_type == "linear-regression":
+        return lm.LinearRegressionModel(model = model,
+                                        forward_override = custom,
+                                        optim = optim,
+                                        lr = lr)
 
 class ProblemTypeException(Exception): pass
