@@ -12,6 +12,8 @@ class RegularClassificationModel(pl.LightningModule):
                  number_of_classes: int,
                  task: str,
                  optim: nn.Module = None,
+                 pretrained: bool = False,
+                 classifier: nn.Module = None,
                  forward_override: bool = False,
                  lr: float = 1e-3):
         """
@@ -22,11 +24,13 @@ class RegularClassificationModel(pl.LightningModule):
                 number_of_classes: Input for accuracy metric.
                 task: Accepts any of the following values - ['binary','multiclass']
                 optim: Torch optimizer. default is Adam
+                pretrained: Existing model. If true, then all layers are frozen and classifier is updated.
+                classifier: If pretrained is True, then this is a required parameter.
                 forward_override (optional): True to use your own forward function from model.
                 lr: Learning rate given as a float. Default is 0.001 
 
         """
-        self.layers = list(model.children())
+        super().__init__()
         self.number_of_classes = number_of_classes
         self.task = task
         self.train_accuracy = torchmetrics.Accuracy(task = self.task, num_classes = number_of_classes)
@@ -36,6 +40,12 @@ class RegularClassificationModel(pl.LightningModule):
         self.forward_override = forward_override
         self.torch_forward = model.forward
         self.lr = lr
+
+        if pretrained:
+            self.layers = list(model.children()[:-1])
+            self.layers.append(classifier)
+        else:
+            self.layers = list(model.children())
     
     def training_step(self, batch, batch_idx):
         x, y = batch
@@ -91,6 +101,19 @@ class RegularClassificationModel(pl.LightningModule):
         self.log('test_acc_step', self.test_accuracy)
         self.log('val_loss', test_loss)
     
+    def predict_step(self, batch, batch_idx):
+        x, y  = batch
+
+        y_logits = self.forward(x).squeeze()
+
+        if self.task == 'binary':
+            y_preds = torch.round(torch.sigmoid(y_logits))
+            return y_preds
+        
+        elif self.task == 'multiclass':
+            y_preds = torch.argmax(y_logits, dim = 1)
+            return y_preds
+    
     def configure_optimizer(self):
         if not self.custom_optim:
             optim = torch.nn.Adam(parameters = self.parameters(), lr = self.lr)
@@ -103,7 +126,6 @@ class RegularClassificationModel(pl.LightningModule):
         if self.forward_override:
             return self.torch_forward(x)
         
-        # Forward pass through all the layers
         for layer in self.layers:
             x = layer(x)
         
@@ -133,9 +155,23 @@ class LinearRegressionModel(pl.LightningModule):
         loss_fn = nn.MSELoss()
         val_loss = loss_fn(y_preds, y)
         self.log('val_loss', val_loss)
+    
+    def test_step(self, batch, batch_idx):
+        x, y = batch
+        y_preds = self.forward(x)
+        loss_fn = nn.MSELoss()
+        test_loss = loss_fn(y_preds, y)
+        self.log('test_loss', test_loss)
+    
+    def predict_step(self, batch, batch_idx):
+        x, y =batch
+        y_preds = self.forward(x)
+        return y_preds
      
 
     def configure_optimizer(self):
+        optim = torch.optim.SGD(parameters = self.parameters(), lr = self.lr)
+        lr_scheduler = torch.optim.lr_scheduler.StepLR(optim, )
         return torch.optim.SGD(parameters = self.parameters(), lr = self.lr)
 
     def forward(self, x):

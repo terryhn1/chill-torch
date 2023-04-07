@@ -48,27 +48,33 @@ def select_model(model: nn.Module,
                  problem_type: str,
                  optim: nn.Module,
                  lr: float,
-                 custom: bool = False):
+                 forward_override: bool = False,
+                 pretrained: bool = False):
     """ Given the problem_type, creates a Lightning Model and returns it.
 
         Args:
             model: torch module that includes all its layers
             problem_type: choice of problem.
-            custom(optional): determinant of using specific model training. default is false.
+            optim: Torch optimizer to be used.
+            lr: learning rate. Must be a float.
+            forward_override (optional): determinant of using specific model training. default is false.
+            pretrained (optional): If true, freezes pre-existing layers for classification.
     """
     if problem_type == "reg-class":
         return lm.RegularClassificationModel(model = model,
-                                                   forward_override = custom,
-                                                   optim = optim,
-                                                   lr = lr)
+                                             forward_override = forward_override,
+                                             optim = optim,
+                                             lr = lr,
+                                             pretrained = pretrained)
     elif problem_type == "img-class":
         return lm.ImageClassificationModel(model = model,
-                                                 forward_override = custom,
-                                                 optim = optim,
-                                                 lr = lr)
+                                           forward_override = forward_override,
+                                           optim = optim,
+                                           lr = lr,
+                                           pretrained = pretrained)
     elif problem_type == "lin-reg":
         return lm.LinearRegressionModel(model = model,
-                                        forward_override = custom,
+                                        forward_override = forward_override,
                                         optim = optim,
                                         lr = lr)
 

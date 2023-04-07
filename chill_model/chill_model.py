@@ -11,9 +11,9 @@ class ChillModel:
                  train_dataloader: DataLoader,
                  test_dataloader: DataLoader,
                  problem_type: str,
-                 is_custom: bool,
+                 forward_override: bool,
                  optim: nn.Module = None,
-                 valid_dataloader: DataLoader = None,
+                 pretrained: bool = False,
                  lr: float = 1e-3):
         """ 
             Args:
@@ -24,34 +24,28 @@ class ChillModel:
         """
         self.train_dataloader = train_dataloader
         self.test_dataloader = test_dataloader
-        self.valid_dataloader = valid_dataloader
         self.problem_type = helper_functions.select_mode(problem_type)
         self.model = helper_functions.select_model(model = model,
                                                    problem_type = self.problem_type,
-                                                   custom = is_custom,
+                                                   forward_override = forward_override,
                                                    optim = optim,
-                                                   lr = lr)
+                                                   lr = lr,
+                                                   pretrained = pretrained)
+        self.trainer = pl.Trainer()
 
     def train(self):
-        trainer = pl.Trainer()
-        trainer.fit(model = self.model, train_dataloaders = self.train_dataloader)
+        self.trainer.fit(model = self.model, train_dataloaders = self.train_dataloader)
     
     def test(self):
-        trainer = pl.Trainer()
-        trainer.test(model = self.model, dataloaders = self.test_dataloader)
+        self.trainer.test(dataloaders = self.test_dataloader)
 
     def validate(self):
-        if self.valid_dataloader:
-            trainer = pl.Trainer()
-            trainer.validate(self.model, self.valid_dataloader)
-        else:
-            raise DataLoaderError("No dataloader initialized. Use model.set_valid_dataloader() to initialize")
+        trainer = pl.Trainer()
+        trainer.validate(self.model)
     
-    def set_valid_dataloader(self, valid_dataloader: DataLoader):
-        if valid_dataloader and isinstance(valid_dataloader, DataLoader):
-            self.valid_dataloader = valid_dataloader
-        else:
-            raise DataLoaderError("No input given for valid_dataloader")
+    def predict(self, predict_dataloader: DataLoader):
+        preds = self.trainer.predict(dataloaders = predict_dataloader)
+        return preds
             
 
 class DataLoaderError(Exception): pass
