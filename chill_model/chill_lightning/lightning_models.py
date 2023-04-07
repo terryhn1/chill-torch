@@ -29,7 +29,9 @@ class RegularClassificationModel(pl.LightningModule):
         self.layers = list(model.children())
         self.number_of_classes = number_of_classes
         self.task = task
-        self.accuracy = torchmetrics.Accuracy(task = self.task, num_classes = number_of_classes)
+        self.train_accuracy = torchmetrics.Accuracy(task = self.task, num_classes = number_of_classes)
+        self.valid_accuracy = torchmetrics.Accuracy(task = self.task, num_classes = number_of_classes)
+        self.test_accuracy = torchmetrics.Accuracy(task = self.task, num_classes = number_of_classes)
         self.optim = optim
         self.forward_override = forward_override
         self.torch_forward = model.forward
@@ -47,13 +49,13 @@ class RegularClassificationModel(pl.LightningModule):
             y_preds = torch.argmax(y_logits, dim = 1)
             loss = torch.nn.CrossEntropyLoss(y_logits, y)
         
-        self.accuracy(y_preds, y)
-        self.log('train_acc_step', self.accuracy)
+        self.train_accuracy(y_preds, y)
+        self.log('train_acc_step', self.train_accuracy)
         
         return {"loss": loss, "log": self.log}
     
     def training_epoch_end(self, outs):
-        self.log('train_acc_epoch', self.accuracy)
+        self.log('train_acc_epoch', self.train_accuracy)
     
     def validation_step(self, batch, batch_idx):
         x, y = batch
@@ -68,9 +70,26 @@ class RegularClassificationModel(pl.LightningModule):
             y_preds = torch.argmax(y_logits, dim = 1)
             val_loss = torch.nn.CrossEntropyLoss(y_logits, y)
         
-        self.accuracy(y_preds, y)
-        self.log('val_acc_step', self.accuracy)
+        self.valid_accuracy(y_preds, y)
+        self.log('val_acc_step', self.valid_accuracy)
         self.log('val_loss', val_loss)
+    
+    def test_step(self, batch, batch_idx):
+        x, y = batch
+
+        y_logits = self.forward(x).squeeze()
+
+        if self.task == 'binary':
+            y_preds = torch.round(torch.sigmoid(y_logits))
+            test_loss = torch.nn.BCEWithLogitsLoss(y_logits, y)
+        
+        elif self.task == 'multiclass':
+            y_preds = torch.argmax(y_logits, dim = 1)
+            test_loss = torch.nn.CrossEntropyLoss(y_logits, y)
+        
+        self.test_accuracy(y_preds, y)
+        self.log('test_acc_step', self.test_accuracy)
+        self.log('val_loss', test_loss)
     
     def configure_optimizer(self):
         if not self.custom_optim:
