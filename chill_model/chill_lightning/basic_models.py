@@ -124,10 +124,10 @@ class RegularClassificationModel(pl.LightningModule):
         return y_preds
     
     def configure_optimizer(self):
-        if not self.custom_optim:
-            optim = torch.nn.Adam(parameters = self.parameters(), lr = self.lr)
+        if not self.optim:
+            optim = torch.nn.Adam(params = self.parameters(), lr = self.lr)
         else:
-            optim = self.custom_optim(parameters = self.parameters(), lr = self.lr)
+            optim = self.optim(params = self.parameters(), lr = self.lr)
         lr_scheduler = torch.optim.lr_scheduler.StepLR(optim, step_size = 1)
         return [optim], [lr_scheduler]
     
@@ -157,7 +157,7 @@ class LinearRegressionModel(pl.LightningModule):
             self.loss_fn = loss_fn
         else:
             self.loss_fn = nn.MSELoss
-            
+
         self.layers = model.children()
 
     def training_step(self, batch, batch_idx):
@@ -187,7 +187,10 @@ class LinearRegressionModel(pl.LightningModule):
         return y_preds
      
     def configure_optimizer(self):
-        optim = torch.optim.SGD(parameters = self.parameters(), lr = self.lr)
+        if not self.optim:
+            optim = torch.optim.SGD(params = self.parameters(), lr = self.lr)
+        else:
+            optim = self.optim(params = self.parameters(), lr = self.lr)
         lr_scheduler = torch.optim.lr_scheduler.StepLR(optim, step_size = 1)
         return [optim], [lr_scheduler]
 
