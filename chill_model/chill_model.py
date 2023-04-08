@@ -5,6 +5,8 @@ from sklearn.model_selection import train_test_split
 import lightning.pytorch as pl
 from . import helper_functions
 
+from typing import Callable
+
 class ChillModel:
     def __init__(self,
                  model: nn.Module,
@@ -12,7 +14,8 @@ class ChillModel:
                  test_dataloader: DataLoader,
                  problem_type: str,
                  forward_override: bool,
-                 optim: nn.Module = None,
+                 optim: nn.optim.Optimizer = None,
+                 loss_fn: Callable = None,
                  pretrained: bool = False,
                  lr: float = 1e-3):
         """ 
@@ -33,6 +36,7 @@ class ChillModel:
                                                    problem_type = self.problem_type,
                                                    forward_override = forward_override,
                                                    optim = optim,
+                                                   loss_fn = loss_fn,
                                                    lr = lr,
                                                    pretrained = pretrained)
         self.trainer = pl.Trainer()

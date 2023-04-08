@@ -1,6 +1,8 @@
 import torch
 from torch import nn
-from chill_torch.chill_model.chill_lightning import lightning_models as lm
+
+from typing import Callable
+
 
 PROBLEM_TYPES = ["lin-reg", "reg-class", "img-class"]
 
@@ -46,7 +48,8 @@ def select_mode(problem_type: str):
 
 def select_model(model: nn.Module,
                  problem_type: str,
-                 optim: nn.Module,
+                 optim: nn.optim.Optimizer,
+                 loss_fn: Callable,
                  lr: float,
                  forward_override: bool = False,
                  pretrained: bool = False):
@@ -61,20 +64,26 @@ def select_model(model: nn.Module,
             pretrained (optional): If true, freezes pre-existing layers for classification.
     """
     if problem_type == "reg-class":
-        return lm.RegularClassificationModel(model = model,
+        from chill_torch.chill_model.chill_lightning import basic_models as bm
+        return bm.RegularClassificationModel(model = model,
                                              forward_override = forward_override,
                                              optim = optim,
+                                             loss_fn = loss_fn,
                                              lr = lr,
                                              pretrained = pretrained)
     elif problem_type == "img-class":
-        return lm.ImageClassificationModel(model = model,
+        from chill_torch.chill_model.chill_lightning import computer_vision_models as cvm
+        return cvm.ImageClassificationModel(model = model,
                                            forward_override = forward_override,
                                            optim = optim,
+                                           loss_fn = loss_fn,
                                            lr = lr,
                                            pretrained = pretrained)
     elif problem_type == "lin-reg":
-        return lm.LinearRegressionModel(model = model,
+        from chill_torch.chill_model.chill_lightning import basic_models as bm
+        return bm.LinearRegressionModel(model = model,
                                         forward_override = forward_override,
+                                        loss_fn = loss_fn,
                                         optim = optim,
                                         lr = lr)
 
