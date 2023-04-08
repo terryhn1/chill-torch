@@ -8,7 +8,7 @@ import torch
 import torchvision
 from torch.utils.data import Dataset, Subset, DataLoader
 import os
-from typing import Dict, Union
+from typing import Dict, Union, List
 
 def create_dataloaders(dataset: Dataset,
                        batch_size: int = 1,
@@ -48,8 +48,9 @@ def create_image_dataset(root_dir: str, transform = None):
     image_folder = torchvision.datasets.ImageFolder(root_dir, transform = transform)
     return image_folder
 
-def create_linear_regression_dataset(csv_file: str, x_header: Union[str, int], y_header: Union[str, int]):
-    """ Uses a csv file to create a dataset for linear regression for 2-dimensional data.
+def create_linear_regression_dataset(csv_file: str, x_headers: List[Union[int, str]], y_header: Union[str, int]):
+    """ Uses a csv file to create a dataset for linear regression, recommended for 2-dimensional data.
+        More features can be added through x_headers
         Only use if looking for solving linear regression problems with deep learning.
 
         Args:
@@ -57,25 +58,29 @@ def create_linear_regression_dataset(csv_file: str, x_header: Union[str, int], y
     
     """
     class LinearRegressionDataset(Dataset):
-        def __init__(self, csv_file, x_header, y_header):
+        def __init__(self, csv_file, x_headers, y_header):
             self.dataset = pd.read_csv(csv_file)
-            self._set_headers(x_header, y_header)
+            self._set_headers(x_headers, y_header)
             
         def __len__(self):
             return len(self.dataset)
 
         def __getitem__(self, index):
-            return (torch.tensor(self.dataset[self.x_header][index], dtype = torch.float32),
+            features = tuple([torch.tensor(self.dataset[x_header],
+                              dtype = torch.float32) for x_header in self.x_headers])
+            return ((torch.cat(features, dim = 1)),
                     torch.tensor(self.dataset[self.y_header][index], dtype = torch.float32))
 
-        def _set_headers(self, x_header, y_header):
-            self._check_headers(x_header, y_header)
-            self.x_header = self._get_header_value(x_header)
+        def _set_headers(self, x_headers, y_header):
+            self._check_headers(x_headers, y_header)
+        
+            self.x_headers = [self._get_header_value(feature) for feature in x_headers]
             self.y_header = self._get_header_value(y_header)
         
-        def _check_headers(self, x_header, y_header):
-            if not isinstance(x_header, str) and not isinstance(x_header, int):
-                raise HeaderError(f"x_header was of type {type(x_header)}. Please verify input is a string or integer")
+        def _check_headers(self, x_headers, y_header):
+            for feature in x_headers:
+                if not isinstance(feature, str) and not isinstance(feature, int):
+                    raise HeaderError(f"x_header was of type {type(feature)}. Please verify input is a string or integer")
             if not isinstance(y_header, str) and not isinstance(y_header, int):
                 raise HeaderError(f"y_header was of type {type(y_header)}. Please verify input is a string or integer")
         
@@ -85,14 +90,14 @@ def create_linear_regression_dataset(csv_file: str, x_header: Union[str, int], y
                     raise HeaderError(f"header of value {header} cannot be found as a column name.")   
                 return header
             
-            elif isinstance(x_header, int):
-                if header < 0 or x_header >= len(self.dataset.columns):
+            elif isinstance(header, int):
+                if header < 0 or x_headers >= len(self.dataset.columns):
                     raise HeaderError(f"header of index {header} is out of range.")
                 return self.dataset.columns[header]
             
-    return LinearRegressionDataset(csv_file, x_header, y_header)
+    return LinearRegressionDataset(csv_file, x_headers, y_header)
 
-def create_logistic_regression_dataset(csv_file: str, class_header: Union[int, str]):
+def create_classification_dataset(csv_file: str, class_header: Union[int, str]):
     """ Uses a csv file to create a dataset that includes labeling capability.
         Transforms non-numerical values to numerical to generate tensors.
 
@@ -101,7 +106,7 @@ def create_logistic_regression_dataset(csv_file: str, class_header: Union[int, s
             class_header: class selected as labeling basis. Must be an integer or string. 
     
     """
-    class LogisticRegressionDataset(Dataset):
+    class ClassificationDataset(Dataset):
         def __init__(self, csv_file, class_header):
             self.dataset = pd.read_csv(csv_file)
             self._set_classes(class_header)
@@ -142,6 +147,6 @@ def create_logistic_regression_dataset(csv_file: str, class_header: Union[int, s
                     label_encoder.fit(column)
                     self.dataset.iloc[:, i] = label_encoder.transform(column)
             
-    return LogisticRegressionDataset(csv_file, class_header)
+    return ClassificationDataset(csv_file, class_header)
 
 class HeaderError(Exception): pass
