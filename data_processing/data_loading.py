@@ -114,7 +114,8 @@ def create_classification_dataset(csv_file: str, class_header: Union[int, str]):
             return len(self.labels)
         
         def __getitem__(self, index):
-            return (torch.tensor(self.dataset.iloc[index, :], dtype = torch.float32), self.labels[index])
+            return (torch.tensor(self.dataset.iloc[index, :], dtype = torch.float32),
+                    torch.tensor(self.labels[index], dtype = torch.float32))
         
         def _set_classes(self, class_header):
             if isinstance(class_header, str):
