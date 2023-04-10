@@ -69,7 +69,8 @@ class RegularClassificationModel(pl.LightningModule):
         elif self.task == 'multiclass':
             y_preds = torch.argmax(y_logits, dim = 1)
 
-        loss = self.loss_fn(y_logits, y)
+        loss_fn = self.loss_fn()
+        loss = loss_fn(y_logits, y)
         self.train_accuracy(y_preds, y)
         self.log('train_acc_step', self.train_accuracy)
         
@@ -88,8 +89,9 @@ class RegularClassificationModel(pl.LightningModule):
 
         elif self.task == 'multiclass':
             y_preds = torch.argmax(y_logits, dim = 1)
-
-        val_loss = self.loss_fn(y_logits, y)
+        
+        loss_fn = self.loss_fn()
+        val_loss = loss_fn(y_logits, y)
         self.valid_accuracy(y_preds, y)
         self.log('val_acc_step', self.valid_accuracy)
         self.log('val_loss', val_loss)
@@ -105,7 +107,8 @@ class RegularClassificationModel(pl.LightningModule):
         elif self.task == 'multiclass':
             y_preds = torch.argmax(y_logits, dim = 1)
         
-        test_loss = self.loss_fn(y_logits, y)
+        loss_fn = self.loss_fn()
+        test_loss = loss_fn(y_logits, y)
         self.test_accuracy(y_preds, y)
         self.log('test_acc_step', self.test_accuracy)
         self.log('val_loss', test_loss)
