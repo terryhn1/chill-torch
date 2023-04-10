@@ -4,8 +4,11 @@ from torch.utils.data import DataLoader
 from sklearn.model_selection import train_test_split
 import lightning.pytorch as pl
 from . import helper_functions
-
 from typing import Callable
+
+MAX_EPOCHS = 40
+LEARNING_RATE = 1e-3
+SEED = 42
 
 class ChillModel:
     def __init__(self,
@@ -17,7 +20,10 @@ class ChillModel:
                  optim: torch.optim.Optimizer = None,
                  loss_fn: Callable = None,
                  pretrained: bool = False,
-                 lr: float = 1e-3):
+                 lr: float = LEARNING_RATE,
+                 max_epochs: int = MAX_EPOCHS,
+                 max_time: dict = None,
+                 deterministic: bool = False,):
         """ 
             Args:
                 model: Torch model with layers initialized. 
@@ -28,6 +34,9 @@ class ChillModel:
                 optim (optional): Custom optimizer for problem. If none given, pre-established optimizer for specific problems used.
                 pretrained (optional): Necessary for feature extraction.
                 lr (optional): Learning rate. Must be given as a float. Default is 0.001.
+                max_epochs (optional): Sets the max_epochs allowed for Trainer. Default is 40.
+                max_time (optional): Sets the max time reached for training. Default has no limit.
+                deterministic (optional): Sets seed if searching for identical results. Default is False. 
         """
         self.train_dataloader = train_dataloader
         self.test_dataloader = test_dataloader
@@ -39,7 +48,15 @@ class ChillModel:
                                                    loss_fn = loss_fn,
                                                    lr = lr,
                                                    pretrained = pretrained)
-        self.trainer = pl.Trainer()
+
+        if deterministic:   
+            pl.seed_everything(SEED, workers = True)
+
+        self.trainer = pl.Trainer(devices = "auto",
+                                  accelerator = "auto",
+                                  max_epochs = max_epochs,
+                                  max_time = max_time,
+                                  deterministic = deterministic)
 
     def train(self):
         self.trainer.fit(model = self.model, train_dataloaders = self.train_dataloader)
