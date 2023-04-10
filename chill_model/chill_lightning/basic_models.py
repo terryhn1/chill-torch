@@ -158,7 +158,7 @@ class LinearRegressionModel(pl.LightningModule):
         else:
             self.loss_fn = nn.MSELoss
 
-        self.layers = model.children()
+        self.layers = nn.Sequential(*list(model.children()))
 
     def training_step(self, batch, batch_idx):
         x, y = batch
