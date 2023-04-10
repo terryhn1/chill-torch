@@ -123,7 +123,7 @@ class RegularClassificationModel(pl.LightningModule):
         
         return y_preds
     
-    def configure_optimizer(self):
+    def configure_optimizers(self):
         if not self.optim:
             optim = torch.nn.Adam(params = self.parameters(), lr = self.lr)
         else:
@@ -186,7 +186,7 @@ class LinearRegressionModel(pl.LightningModule):
         y_preds = self.forward(x)
         return y_preds
      
-    def configure_optimizer(self):
+    def configure_optimizers(self):
         if not self.optim:
             optim = torch.optim.SGD(params = self.parameters(), lr = self.lr)
         else:
