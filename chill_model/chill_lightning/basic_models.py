@@ -163,21 +163,24 @@ class LinearRegressionModel(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         x, y = batch
         y_preds = self.forward(x)
-        train_loss = self.loss_fn(y_preds, y)
+        loss_fn = self.loss_fn()
+        train_loss = loss_fn(y_preds, y)
 
         return {"loss": train_loss, "log": self.log}
     
     def validation_step(self, batch, batch_idx):
         x, y = batch
         y_preds = self.forward(x)
-        val_loss = self.loss_fn(y_preds, y)
+        loss_fn = self.loss_fn()
+        val_loss = loss_fn(y_preds, y)
 
         self.log('val_loss', val_loss)
     
     def test_step(self, batch, batch_idx):
         x, y = batch
         y_preds = self.forward(x)
-        test_loss = self.loss_fn(y_preds, y)
+        loss_fn = self.loss_fn()
+        test_loss = loss_fn(y_preds, y)
         
         self.log('test_loss', test_loss)
     
