@@ -66,7 +66,7 @@ def create_linear_regression_dataset(csv_file: str, x_headers: List[Union[int, s
             return len(self.dataset)
 
         def __getitem__(self, index):
-            features = tuple([torch.tensor(self.dataset[x_header],
+            features = tuple([torch.tensor(self.dataset[x_header][index],
                               dtype = torch.float32) for x_header in self.x_headers])
             return ((torch.cat(features, dim = 1)),
                     torch.tensor(self.dataset[self.y_header][index], dtype = torch.float32))
