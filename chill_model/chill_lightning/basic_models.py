@@ -12,7 +12,7 @@ class RegularClassificationModel(pl.LightningModule):
                  model: nn.Module,
                  number_of_classes: int,
                  task: str,
-                 optim: nn.optim.Optimizer = None,
+                 optim: torch.optim.Optimizer = None,
                  loss_fn: Callable = None,
                  pretrained: bool = False,
                  classifier: nn.Module = None,

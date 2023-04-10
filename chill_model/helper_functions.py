@@ -48,7 +48,7 @@ def select_mode(problem_type: str):
 
 def select_model(model: nn.Module,
                  problem_type: str,
-                 optim: nn.optim.Optimizer,
+                 optim: torch.optim.Optimizer,
                  loss_fn: Callable,
                  lr: float,
                  forward_override: bool = False,

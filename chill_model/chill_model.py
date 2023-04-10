@@ -14,7 +14,7 @@ class ChillModel:
                  test_dataloader: DataLoader,
                  problem_type: str,
                  forward_override: bool,
-                 optim: nn.optim.Optimizer = None,
+                 optim: torch.optim.Optimizer = None,
                  loss_fn: Callable = None,
                  pretrained: bool = False,
                  lr: float = 1e-3):
