@@ -4,7 +4,7 @@ from torch.utils.data import DataLoader
 from sklearn.model_selection import train_test_split
 import lightning.pytorch as pl
 from . import helper_functions
-from typing import Callable
+from typing import Callable, List
 
 MAX_EPOCHS = 40
 LEARNING_RATE = 1e-3
@@ -23,7 +23,8 @@ class ChillModel:
                  lr: float = LEARNING_RATE,
                  max_epochs: int = MAX_EPOCHS,
                  max_time: dict = None,
-                 deterministic: bool = False,):
+                 deterministic: bool = False,
+                 callbacks: List[str] = []):
         """ 
             Args:
                 model: Torch model with layers initialized. 
@@ -47,16 +48,20 @@ class ChillModel:
                                                    optim = optim,
                                                    loss_fn = loss_fn,
                                                    lr = lr,
-                                                   pretrained = pretrained)
+                                                   pretrained = pretrained,
+                                                   )
 
         if deterministic:   
             pl.seed_everything(SEED, workers = True)
+
+        callbacks = helper_functions.set_callbacks(callbacks)
 
         self.trainer = pl.Trainer(devices = "auto",
                                   accelerator = "auto",
                                   max_epochs = max_epochs,
                                   max_time = max_time,
-                                  deterministic = deterministic)
+                                  deterministic = deterministic,
+                                  callbacks = callbacks)
 
     def train(self):
         self.trainer.fit(model = self.model, train_dataloaders = self.train_dataloader)

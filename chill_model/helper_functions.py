@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 
-from typing import Callable
+from typing import Callable, List
 
 
 PROBLEM_TYPES = ["lin-reg", "reg-class", "img-class"]
@@ -86,5 +86,37 @@ def select_model(model: nn.Module,
                                         loss_fn = loss_fn,
                                         optim = optim,
                                         lr = lr)
+
+def set_callbacks(callbacks: list):
+    """ Turns string arguments into callbacks
+
+        Args:
+            callbacks: A list of Callback objects or strings indicating for default setup.
+
+        Accepted Callbacks:
+            'early-stopping': creates an early stopping callback to monitor loss
+            'grad-accum': creates a gradient accumulator to split batches to mini-batches.
+            'lr-finder': finds an optimal learning rate during training.
+            'timer-[6,12,24]': shuts down training after 6 hours, 12 hours, or 24 hours
+
+    """
+    import lightning.pytorch.callbacks as callbacks
+
+    results = []
+    for callback in callbacks:
+        if isinstance(callback, callbacks.Callback):
+            results.append(callback)
+        elif callback == 'early-stopping':
+            results.append(callbacks.early_stopping.EarlyStopping(monitor = "val_loss", mode = 'min'))
+        elif callback == 'grad-accum':
+            results.append(callbacks.GradientAccumulationScheduler(scheduling = {4: 2}))
+        elif callback == 'lr-finder':
+            results.append(callbacks.LearningRateFinder(min_lr = 1e-5, num_training_steps = 50))
+        elif callback == 'timer-6' or callback == 'timer-12' or callback == 'timer-24':
+            if callback == 'timer-6': results.append(callbacks.Timer(duration = dict(hours = 6)))
+            elif callback == 'timer-12': results.append(callbacks.Timer(duration = dict(hours = 12)))
+            elif callback == 'timer-24': results.append(callbacks.Timer(duration = dict(hours = 24)))
+    return results
+
 
 class ProblemTypeException(Exception): pass
