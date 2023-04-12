@@ -5,9 +5,6 @@ from torch import nn
 from typing import Callable
 
 class RegularClassificationModel(pl.LightningModule):
-    """ Supports binary and multi-class classification.
-        Multi-labelling in the process.
-    """
     def __init__(self,
                  model: nn.Module,
                  number_of_classes: int,
@@ -19,7 +16,8 @@ class RegularClassificationModel(pl.LightningModule):
                  forward_override: bool = False,
                  lr: float = 1e-3):
         """
-            Creates a simple classification model - does not support image classification.
+            Creates a simple classification model. Currently does not support multi-labeling.
+            For image classification, check out the ImageClassificationModel instead.
 
             Args:
                 model: Torch module with layers built from Sequential blocks
@@ -150,6 +148,18 @@ class LinearRegressionModel(pl.LightningModule):
                  optim: torch.optim.Optimizer = None,
                  loss_fn: Callable = None,
                  lr: float = 1e-3):
+        """
+            Creates a simple linear regression model that is capable of handling multiple features.
+            Note: This procedure does not cover SVM that helps with reducing dimensionality.
+
+            Args:
+                model: Torch module. Layers are required.
+                forward_override: Enables custom forward function from model passed over.
+                optim: torch optimizer. Default is SGD.
+                loss_fn: loss function. Regression should take MSE or MAE. Default is MSE.
+                lr: learning rate. Must be less than 1.
+
+        """
         super().__init__()
         self.lr = lr
         self.optim = optim
