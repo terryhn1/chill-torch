@@ -37,7 +37,8 @@ class ChillModel:
                 lr (optional): Learning rate. Must be given as a float. Default is 0.001.
                 max_epochs (optional): Sets the max_epochs allowed for Trainer. Default is 40.
                 max_time (optional): Sets the max time reached for training. Default has no limit.
-                deterministic (optional): Sets seed if searching for identical results. Default is False. 
+                deterministic (optional): Sets seed if searching for identical results. Default is False.
+                callbacks (optional): Sets the callbacks for the trainer. Accepts string values or Callback objects.
         """
         self.train_dataloader = train_dataloader
         self.test_dataloader = test_dataloader
