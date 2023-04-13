@@ -77,7 +77,7 @@ correct model for the problem type that the user would like to look at. Under th
 the lightning models have been standardarized to boost production speed by limiting customization. However, as the user grows,
 customization options can free up with the inputs that can be sent over to the ChillModel.
 
-[To see more on ChillModel, click here.](https://github.com/terryhn1/chill_torch/chill_model)
+[To see more on ChillModel, click here.](https://github.com/terryhn1/chill_torch/tree/master/chill_model)
 
 ### ChillVisualizer
 ChillVisualizer performs what it needs to: visualizing your data. Normally, students and intro-level developers
@@ -87,7 +87,7 @@ recommended graphs that the user can choose from in order to help them. It not o
 on training/testing data(which can be accessed through Tensorboard), it can help you visualize raw data and help
 find the connections, building your skills on data analysis.
 
-[To see more on ChillVisualizer, click here.](https://github.com/terryhn1/chill_torch/chill_visualizer)
+[To see more on ChillVisualizer, click here.](https://github.com/terryhn1/chill_torch/tree/master/chill_visualizer)
 
 ### Sample Workflow
 
