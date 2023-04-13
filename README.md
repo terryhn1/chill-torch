@@ -9,14 +9,14 @@ learning about the various models in the industry.
 Use the command below in a Google Colab or Jupyter Notebooks into your main project directory.
 
 When using in terminal:
-'''bash
+```bash
 git clone https://github.com/terryhn1/chill_torch.git
-'''
+```
 
 When using in code block:
-'''bash
+```bash
 !git clone https://github.com/terryhn1/chill_torch.git
-'''
+```
 
 ## Package Requirements
 The following are packages/libraries that require installation for usage of this repository.
@@ -33,9 +33,9 @@ The following are packages/libraries that require installation for usage of this
 * Numpy
 
 Package Download Commands using 'pip install':
-'''bash
+```bash
 pip install torch torch-lightning torchvision torchtext torchmetrics pandas sklearn matplotlib seaborn numpy 
-'''
+```
 
 ### Workflow
 ChillTorch is a package meant for intro-level developers or students that want to reduce
