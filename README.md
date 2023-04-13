@@ -131,8 +131,8 @@ import chill_torch.chill_model.chill_model as cm
 
 model = cm.ChillModel(model = torch_model,
                       train_dataloader = dataloaders["train"],
-                      test_dataloader = datalaoders["test"],
-                      problem_type = "reg-class"
+                      test_dataloader = dataloaders["test"],
+                      problem_type = "reg-class",
                       forward_override = False)
 
 model.train()
