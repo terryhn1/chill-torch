@@ -62,3 +62,58 @@ With ChillTorch built on Pytorch Lightning, you can reduce the need of these unt
 On top of this, by using PyTorch Lightning as the backbone for all models, you can easily customize the code to your needs,
 should you want to add more customizable parts to it or to use different models on different problem types. 
 
+### Sample Workflow
+
+1. Create our own dataset from CSV using ChillTorch for a classification problem.
+```python
+import chill_torch.data_processing.data_loading as dataloading
+
+custom_dataset = dataloading.create_classification_dataset(csv_file = "foo.csv",
+                                                           class_header = "score")
+dataloaders = dataloading.create_dataloaders(dataset = custom_dataset,
+                                             batch_size = 16)
+```
+
+2. Create a Pytorch model capable of classification
+```python
+import torch
+
+class MyModel(torch.nn.Module):
+    def __init__(self, in_features, hidden_units, out_features):
+        super().__init__()
+
+        # Can be written in order as multiple attributes
+        self.fc1 = torch.nn.Linear(in_features, hidden_units)
+        self.relu = torch.nn.ReLU(0.2)
+        self.fc2 = torch.nn.Linear(hidden_units, out_features)
+
+        # Or can be written as a sequential layer
+        self.layer1 = torch.nn.Sequential(torch.nn.Linear(in_features, hidden_units),
+                                          torch.nn.ReLU(0.2),
+                                          torch.nn.Linear(hidden_units, out_features))
+
+    def forward(self):
+        pass
+
+torch_model = MyModel(2, 8, 1)
+```
+
+3. Integrate it into ChillModel and train.
+```python
+import chill_torch.chill_model.chill_model as cm
+
+model = cm.ChillModel(model = torch_model,
+                      train_dataloader = dataloaders["train"],
+                      test_dataloader = datalaoders["test"],
+                      problem_type = "reg-class"
+                      forward_override = False)
+
+model.train()
+preds = model.predict(test_dataloader)
+```
+
+4. Create a Visualizer instance to now plot
+```python
+visualizer = ChillVisualizer(model)
+visualizer.visualize()
+```
