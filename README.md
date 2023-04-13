@@ -19,22 +19,24 @@ When using in code block:
 ```
 
 ## Package Requirements
-The following are packages/libraries that require installation for usage of this repository.
+The following are packages/libraries that require installation for usage of this repository:
 * [PyTorch](https://pytorch.org/)
-* PyTorch Lightning
-* Torchvision
-* Torchtext
-* Torchaudio
-* Torchmetrics
-* Pandas
-* Scikit-learn
-* Matplotlib
-* Seaborn
-* Numpy
+* [PyTorch Lightning](https://lightning.ai/docs/pytorch/stable/)
+* [Scikit-learn](https://scikit-learn.org/stable/)
+* [Torchmetrics](https://torchmetrics.readthedocs.io/en/stable/)
+* [Pandas](https://pandas.pydata.org/)
+* [Numpy](https://numpy.org/)
+* [Matplotlib](https://matplotlib.org/)
+* [Seaborn](https://seaborn.pydata.org/)
+
+The following are optional packages that are downloaded if you are planning on working with image processing, text processing, or audio processing:
+* [Torchvision](https://pytorch.org/vision/stable/index.html)
+* [Torchtext](https://pytorch.org/text/stable/index.html)
+* [Torchaudio](https://pytorch.org/audio/stable/index.html)
 
 Package Download Commands using 'pip install':
 ```bash
-pip install torch torch-lightning torchvision torchtext torchmetrics pandas sklearn matplotlib seaborn numpy 
+pip install torch lightning torchvision torchtext torchmetrics pandas scikit-learn matplotlib seaborn numpy 
 ```
 
 ### Workflow
