@@ -20,7 +20,7 @@ When using in code block:
 
 ## Package Requirements
 The following are packages/libraries that require installation for usage of this repository.
-* PyTorch
+* [PyTorch](https://pytorch.org/)
 * PyTorch Lightning
 * Torchvision
 * Torchtext
