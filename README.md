@@ -70,7 +70,7 @@ With ChillTorch built on Pytorch Lightning, you can reduce the need of these unt
 On top of this, by using PyTorch Lightning as the backbone for all models, you can easily customize the code to your needs,
 should you want to add more customizable parts to it or to use different models on different problem types.
 
-## ChillModel
+### ChillModel
 ChillModel is essentially the main class of the ChillTorch package. It converts a PyTorch model into a
 Lightning model, and stores all the dataloaders needed for training/testing. ChillModel is able to select the
 correct model for the problem type that the user would like to look at. Under the hood, as what PyTorch Lightning says,
@@ -79,7 +79,7 @@ customization options can free up with the inputs that can be sent over to the C
 
 [To see more on ChillModel, click here.](https://github.com/terryhn1/chill_torch/chill_model)
 
-## ChillVisualizer
+### ChillVisualizer
 ChillVisualizer performs what it needs to: visualizing your data. Normally, students and intro-level developers
 can be puzzled at how to create the right plots for their data, and this can lead to more time taken or limited
 options to choose from that. ChillVisualizer is able to take all the data accumulated by ChillModel, creating
@@ -87,7 +87,7 @@ recommended graphs that the user can choose from in order to help them. It not o
 on training/testing data(which can be accessed through Tensorboard), it can help you visualize raw data and help
 find the connections, building your skills on data analysis.
 
-[To see more on ChillVisualizer, click here.](https://github.com/terryhn1/chill_torch/chillvisualizer)
+[To see more on ChillVisualizer, click here.](https://github.com/terryhn1/chill_torch/chill_visualizer)
 
 ### Sample Workflow
 
