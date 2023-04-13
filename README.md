@@ -39,18 +39,18 @@ Package Download Commands using 'pip install':
 pip install torch lightning torchvision torchtext torchmetrics pandas scikit-learn matplotlib seaborn numpy 
 ```
 
-### Workflow
+### Overview
 ChillTorch is a package meant for intro-level developers or students that want to reduce
 the amount of repeatable work and have a fast streamline process from researching to results.
 Therefore, ChillTorch offers two main classes to work with: the **ChillModel** and the **ChillVisualizer**,
 along with the capability to quickly convert custom data to Torch DataLoaders for training and testing.
 
 The workflow is simple.
-1. Use ChillTorch's data processing capabilities to upload your own custom dataset. Or, simply download Torch's datasets for usage.
-2. Create your own PyTorch model with the appropriate layers in order. Forward function is optional!
-3. Upload your model to ChillModel with a certain problem type and select custom arguments if desired.
-4. Use its train method, no parameters needed and no other arguments need to be handled!
-5. Create a ChillTorch Visualizer instance, call it's visualize function, and now you can get faster visualizations recommended for your problem.
+1. ***Use ChillTorch's data processing capabilities*** to upload your own custom dataset. Or, simply download Torch's datasets for usage.
+2. ***Create your own PyTorch model*** with the appropriate layers in order. Forward function is optional!
+3. ***Upload your model to ChillModel*** with a certain problem type and select custom arguments if desired.
+4. ***Use its train method***, no parameters needed and no other arguments need to be handled!
+5. ***Create a ChillTorch Visualizer instance***, call it's visualize function, and now you can get faster visualizations recommended for your problem.
 6. You're done!
 
 With ChillTorch built on Pytorch Lightning, you can reduce the need of these until you feel more confident with PyTorch:
