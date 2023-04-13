@@ -5,6 +5,14 @@ all while limiting the amount of workflow that is required to get the project up
 the time it takes to get results up, intro-level PyTorch developers can focus more on
 learning about the various models in the industry.
 
+## Table of Contents
+1. [Installation](https://github.com/terryhn1/chill_torch#installation)
+2. [Package Requirements](https://github.com/terryhn1/chill_torch#package-requirements)
+3. [Overview](https://github.com/terryhn1/chill_torch#overview)
+4. [ChillModel](https://github.com/terryhn1/chill_torch#chillmodel)
+5. [ChillVisualizer](https://github.com/terryhn1/chill_torch#chillvisualizer)
+6. [Sample Workflow](https://github.com/terryhn1/chill_torch#sample-workflow)
+
 ## Installation
 Use the command below in a Google Colab or Jupyter Notebooks into your main project directory.
 
