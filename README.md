@@ -1,5 +1,5 @@
 # ChillTorch
-ChillTorch is a lightweight package that allows for streamlining PyTorch projects by
+ChillTorch is a lightweight package for streamlining PyTorch projects by
 allowing the user to visualize their data and to set up deep learning models in little time,
 all while limiting the amount of workflow that is required to get the project up. By reducing
 the time it takes to get results up, intro-level PyTorch developers can focus more on
