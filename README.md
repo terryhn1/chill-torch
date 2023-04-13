@@ -114,6 +114,7 @@ preds = model.predict(test_dataloader)
 
 4. Create a Visualizer instance to now plot
 ```python
-visualizer = ChillVisualizer(model)
-visualizer.visualize()
+import chill_Torch.chill_visualizer.chill_visualizer as c_visualizer
+visualizer = c_visualizer.ChillVisualizer(model)
+visualizer.visualize(all_avail_plots = True)
 ```
