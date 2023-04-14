@@ -3,7 +3,7 @@ from torch import nn
 from torch.utils.data import DataLoader
 from sklearn.model_selection import train_test_split
 import lightning.pytorch as pl
-from . import helper_functions
+from . import utils
 from typing import Callable, List
 
 MAX_EPOCHS = 40
@@ -42,20 +42,20 @@ class ChillModel:
         """
         self.train_dataloader = train_dataloader
         self.test_dataloader = test_dataloader
-        self.problem_type = helper_functions.select_mode(problem_type)
-        self.model = helper_functions.select_model(model = model,
-                                                   problem_type = self.problem_type,
-                                                   forward_override = forward_override,
-                                                   optim = optim,
-                                                   loss_fn = loss_fn,
-                                                   lr = lr,
-                                                   pretrained = pretrained,
-                                                   )
+        self.problem_type = utils.select_mode(problem_type)
+        self.model = utils.select_model(model = model,
+                                        problem_type = self.problem_type,
+                                        forward_override = forward_override,
+                                        optim = optim,
+                                        loss_fn = loss_fn,
+                                        lr = lr,
+                                        pretrained = pretrained,
+                                        )
 
         if deterministic:   
             pl.seed_everything(SEED, workers = True)
 
-        callbacks = helper_functions.set_callbacks(callbacks)
+        callbacks = utils.set_callbacks(callbacks)
 
         self.trainer = pl.Trainer(devices = "auto",
                                   accelerator = "auto",
