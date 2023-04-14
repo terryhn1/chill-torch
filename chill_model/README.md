@@ -167,3 +167,23 @@ chill_model = ChillModel(model = model,
                          problem_type = 'img-class',
                          forward_override = True)
 ```
+
+### Sample Workflow 4: Training/Testing
+```python
+# Train
+chill_model.train()
+
+# Test
+chill_model.test()
+
+# Predict
+
+# If dataset comes from outside ChillTorch
+label_to_classes = {0: 'donut', 1: 'sushi', 2: 'french fry'}
+
+# If dataset comes from using ChillTorch's data processing
+label_to_classes = original_dataset.label_to_classes
+
+preds = chill_model.predict(predict_dataloader)
+preds = chill_model.convert_predictions(preds, label_to_classes)
+```
