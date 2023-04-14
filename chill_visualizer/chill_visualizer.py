@@ -2,39 +2,47 @@ from ..chill_model import ChillModel
 from chill_reccs import ChillVisualRecommender
 import seaborn as sns
 import matplotlib.pyplot as plt
+import torch
+from torch.utils.data import Dataset
 
 class ChillVisualizer:
-    def __init__(self):
-        """ Creates an instance of the ChillVisualizer, which can store the history
-        of all models sent. 
+    def __init__(self, model: ChillModel, dataset: Dataset, dataset_type: str):
+        
+        self.model = model
+        self.dataset = dataset
+        self.dataset_type = dataset_type    
+
+    def __call__(self, **kwargs):
+        """ Allows the user to change the attributes if desired.
         """
-        self.history = {}
+        for key, value in kwargs.items():
+            if key not in self.__dict__:
+                raise AttributeError(f"Attribute {key} cannot be assigned")
+            self.__dict__[key] = value
+
+    def visualize(self):
+        pass
+
+    def _count_plot(self):
+        pass
+
+    def _hist(self):
+        pass
+
+    def _line_plot(self):
+        pass
+
+    def _heatmap(self):
+        pass
+
+    def _accuracy_to_loss_plot(self):
+        pass
+
+    def plot_k_images(self, k = 1, random_seed = None):
+        pass
+
         
-    
-    def visualize(self, model: ChillModel, override: bool = False, option: int = -1):
-        if override and option != -1:
-            chill_recc = ChillVisualRecommender(model.problem_type, option)
-        elif not override and option != -1:
-            raise VisualizationOverrideException("Override must be turned to True to use different option than recommended")
-        else:
-            chill_recc = ChillVisualRecommender(model.problem_type)
-        
-        self.history[model.name] = chill_recc.graph_choices
-
-        if option >= len(self.history[model.name]):
-            raise IndexError(f"Option given needs to be in the range of [0 to {len(self.history[model.name])})")
-
-        # Selection of plot to get from chill_recc  
-        if self.history[model.name] == "count-plot":
-            pass
-        elif self.history[model.name] == "hist":
-            pass
-        elif self.history[model.name] == "scatter":
-            pass
-        elif self.history[model.name] == "line-plot":
-            pass
 
 
 
-class VisualizationOverrideException(Exception): pass
         
