@@ -19,7 +19,6 @@ class ChillModel:
                  forward_override: bool,
                  optim: torch.optim.Optimizer = None,
                  loss_fn: Callable = None,
-                 pretrained: bool = False,
                  lr: float = LEARNING_RATE,
                  max_epochs: int = MAX_EPOCHS,
                  max_time: dict = None,
@@ -33,7 +32,6 @@ class ChillModel:
                 problem_type: Accepts problems types from [lin-reg, img-class, reg-class]
                 forward_override (optional): If true, forward function must be created in model for custom propagation
                 optim (optional): Custom optimizer for problem. If none given, pre-established optimizer for specific problems used.
-                pretrained (optional): Necessary for feature extraction.
                 lr (optional): Learning rate. Must be given as a float. Default is 0.001.
                 max_epochs (optional): Sets the max_epochs allowed for Trainer. Default is 40.
                 max_time (optional): Sets the max time reached for training. Default has no limit.
@@ -49,7 +47,6 @@ class ChillModel:
                                         optim = optim,
                                         loss_fn = loss_fn,
                                         lr = lr,
-                                        pretrained = pretrained,
                                         )
 
         if deterministic:   

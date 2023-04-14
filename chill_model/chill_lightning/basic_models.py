@@ -11,7 +11,6 @@ class RegularClassificationModel(pl.LightningModule):
                  task: str,
                  optim: torch.optim.Optimizer = None,
                  loss_fn: Callable = None,
-                 pretrained: bool = False,
                  classifier: nn.Module = None,
                  forward_override: bool = False,
                  lr: float = 1e-3):
@@ -25,7 +24,6 @@ class RegularClassificationModel(pl.LightningModule):
                 task: Accepts any of the following values - ['binary','multiclass']
                 optim: Torch optimizer. default is Adam
                 loss_fn: Custom loss function if added.
-                pretrained: Existing model. If true, then all layers are frozen and classifier is updated.
                 classifier: If pretrained is True, then this is a required parameter.
                 forward_override (optional): True to use your own forward function from model.
                 lr: Learning rate given as a float. Default is 0.001 
@@ -40,7 +38,8 @@ class RegularClassificationModel(pl.LightningModule):
         self.forward_override = forward_override
         self.torch_forward = model.forward
         self.lr = lr
-        
+        self.layers = nn.Sequential(*list(model.children()))
+
         if loss_fn:
             self.loss_fn = loss_fn
         elif self.task == 'binary':
@@ -48,14 +47,6 @@ class RegularClassificationModel(pl.LightningModule):
         elif self.task == 'multiclass':
             self.loss_fn = nn.CrossEntropyLoss
 
-        if pretrained:
-            self.layers = list(model.children()[:-1])
-            self.layers.append(classifier)
-    
-        else:
-            self.layers = list(model.children())
-        
-        self.layers = nn.Sequential(*self.layers)
     
     def training_step(self, batch, batch_idx):
         x, y = batch
@@ -165,13 +156,13 @@ class LinearRegressionModel(pl.LightningModule):
         self.optim = optim
         self.forward_override = forward_override
         self.torch_forward = model.forward
+        self.layers = nn.Sequential(*list(model.children()))
 
         if loss_fn:
             self.loss_fn = loss_fn
         else:
             self.loss_fn = nn.MSELoss
 
-        self.layers = nn.Sequential(*list(model.children()))
 
     def training_step(self, batch, batch_idx):
         x, y = batch
