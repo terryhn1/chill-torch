@@ -135,7 +135,7 @@ def create_classification_dataset(csv_file: str, class_header: Union[int, str]):
             label_encoder = preprocessing.LabelEncoder()
             label_encoder.fit(self.classes)
             self.labels = label_encoder.transform(self.dataset[class_header])
-            self.label_to_class = {i: label_encoder.inverse_transform([i])[0] for i in label_encoder.transform(self.classes)}
+            self.labels_to_classes = {i: label_encoder.inverse_transform([i])[0] for i in label_encoder.transform(self.classes)}
             self.dataset = self.dataset.drop(class_header, axis = 1)
     
         def _encode_string_values(self):

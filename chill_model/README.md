@@ -8,6 +8,7 @@
 5. [Workflow 1: Custom Model with Custom Propagation](https://github.com/terryhn1/chill_torch/tree/master/chill_model#sample-workflow-1-instantiating-from-custom-model-with-custom-forward)
 6. [Workflow 2: Custom Model with No Custom Propagation](https://github.com/terryhn1/chill_torch/tree/master/chill_model#sample-workflow-2-initializing-custom-model-with-no-custom-forward)
 7. [Workflow 3: Transfer Learning using Feature Extraction](https://github.com/terryhn1/chill_torch/tree/master/chill_model#sample-workflow-3-transfer-learning---feature-extraction)
+8. [Workflow 4: Training and Testing]()
 
 ### Overview
 ChillModel is a class that encapsulates the capabilities of PyTorch Lightning,
