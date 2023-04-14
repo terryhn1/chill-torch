@@ -50,7 +50,7 @@ def __init__(self,
 #### Required Parameters
 * **model**: your custom/pretrained PyTorch Model. Your layers must be written in the order that is needed for propagation.
 * **train_dataloader**: A Dataloader for training. You can create custom dataloaders through ChillTorch or use pre-existing ones from PyTorch.
-* **test_dataloader**: A datalaoder for testing.
+* **test_dataloader**: A Dataloader for testing.
 * **problem_type**: A string that depicts what problem you are trying to solve(e.g. classification, regression, labeling, etc). Currently, only 'img-class', 'reg-class', and 'lin-reg' are allowed for the problem_type.
 * **forward_override**: A boolean that determines whether to use your own propagation function or to use a standard one.
 
