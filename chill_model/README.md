@@ -1,5 +1,14 @@
 ## ChillModel
 
+### Table of Contents
+1. [Overview](https://github.com/terryhn1/chill_torch/tree/master/chill_model#overview)
+2. [Fast Production vs. Customization](https://github.com/terryhn1/chill_torch/tree/master/chill_model#fast-production-vs-customization)
+3. [Initialization](https://github.com/terryhn1/chill_torch/tree/master/chill_model#chillmodel-initialization)
+4. [Class Methods](https://github.com/terryhn1/chill_torch/tree/master/chill_model#methods)
+5. [Workflow 1: Custom Model with Custom Propagation](https://github.com/terryhn1/chill_torch/tree/master/chill_model#sample-workflow-1-instantiating-from-custom-model-with-custom-forward)
+6. [Workflow 2: Custom Model with No Custom Propagation](https://github.com/terryhn1/chill_torch/tree/master/chill_model#sample-workflow-2-initializing-custom-model-with-no-custom-forward)
+7. [Workflow 3: Transfer Learning using Feature Extraction](https://github.com/terryhn1/chill_torch/tree/master/chill_model#sample-workflow-3-transfer-learning---feature-extraction)
+
 ### Overview
 ChillModel is a class that encapsulates the capabilities of PyTorch Lightning,
 holding all the data necessary to enable PyTorch Lightning to work. However, initializing
@@ -53,7 +62,7 @@ def __init__(self,
 * **deterministic**: Tells the Lightning Trainer to set a seed or not to get the same random state.
 * **callbacks**: A list of callbacks to help with training and storing data. You may use string arguments or give your own callbacks.
 
-## Methods
+### Class Methods
 ```python
 def train(self):
     """ Uses attributes created from initialization to run training through Lightning Trainer 
@@ -123,7 +132,7 @@ class CustomModel2(torch.nn.Module):
 2. Instantiate the ChillModel
 ```python
 model = ChillModel(model = CustomModel2(4, 1, 8),
-                   train_datalaoder = train_dataloader,
+                   train_dataloader = train_dataloader,
                    test_dataloader = test_dataloader,
                    problem_type = 'reg-class',
                    forward_override = False)
