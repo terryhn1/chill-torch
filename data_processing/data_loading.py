@@ -10,6 +10,84 @@ from torch.utils.data import Dataset, Subset, DataLoader
 import os
 from typing import Dict, Union, List
 
+class LinearRegressionDataset(Dataset):
+        def __init__(self, csv_file, x_headers, y_header):
+            self.dataset = pd.read_csv(csv_file)
+            self._set_headers(x_headers, y_header)
+            
+        def __len__(self):
+            return len(self.dataset)
+
+        def __getitem__(self, index):
+            return torch.tensor([self.dataset[x_header][index] for x_header in self.x_headers], dtype = torch.float32), \
+                    torch.tensor(self.dataset[self.y_header][index], dtype = torch.float32)
+
+        def _set_headers(self, x_headers, y_header):
+            self._check_headers(x_headers, y_header)
+        
+            self.x_headers = [self._get_header_value(feature) for feature in x_headers]
+            self.y_header = self._get_header_value(y_header)
+        
+        def _check_headers(self, x_headers, y_header):
+            for feature in x_headers:
+                if not isinstance(feature, str) and not isinstance(feature, int):
+                    raise HeaderError(f"x_header was of type {type(feature)}. Please verify input is a string or integer")
+            if not isinstance(y_header, str) and not isinstance(y_header, int):
+                raise HeaderError(f"y_header was of type {type(y_header)}. Please verify input is a string or integer")
+        
+        def _get_header_value(self, header):
+            if isinstance(header, str):
+                if header not in self.dataset.columns:
+                    raise HeaderError(f"header of value {header} cannot be found as a column name.")   
+                return header
+            
+            elif isinstance(header, int):
+                if header < 0 or header >= len(self.dataset.columns):
+                    raise HeaderError(f"header of index {header} is out of range.")
+                return self.dataset.columns[header]
+            
+class ClassificationDataset(Dataset):
+        def __init__(self, csv_file, class_header):
+            self.data_frame = pd.read_csv(csv_file)
+            self._set_classes(class_header)
+            self._encode_string_values()
+            
+        def __len__(self):
+            return len(self.labels)
+        
+        def __getitem__(self, index):
+            return (torch.tensor(self.data_frame.iloc[index, :], dtype = torch.float32),
+                    torch.tensor(self.labels[index], dtype = torch.float32))
+        
+        def _set_classes(self, class_header):
+            if isinstance(class_header, str):
+                if class_header not in self.data_frame.columns:
+                    raise HeaderError("Incorrect header of str type. Please check header input value")
+                
+            elif isinstance(class_header, int):
+                if class_header > len(self.data_frame) or class_header < 0:
+                    raise HeaderError("Incorrect header of int type. Please check header input value")
+                
+                class_header = self.data_frame.columns[class_header]
+
+            else:
+                raise HeaderError(f"Incorrect header given with type {type(class_header)}. Header must be given as an integer or string")
+            
+            self.classes = self.data_frame[class_header].unique()
+            label_encoder = preprocessing.LabelEncoder()
+            label_encoder.fit(self.classes)
+            self.labels = label_encoder.transform(self.data_frame[class_header])
+            self.labels_to_classes = {i: label_encoder.inverse_transform([i])[0] for i in label_encoder.transform(self.classes)}
+            self.data_frame = self.data_frame.drop(class_header, axis = 1)
+    
+        def _encode_string_values(self):
+            for i in range(len(self.dataset.columns)):
+                column = self.dataset.iloc[:, i]
+                if not isinstance(column[0], int) and not isinstance(column[0], float):
+                    label_encoder = preprocessing.LabelEncoder()
+                    label_encoder.fit(column)
+                    self.dataset.iloc[:, i] = label_encoder.transform(column)
+
 def create_dataloaders(dataset: Dataset,
                        batch_size: int = 1,
                        collate_fn = None,
@@ -57,42 +135,6 @@ def create_linear_regression_dataset(csv_file: str, x_headers: List[Union[int, s
             csv_file: a direct file path to the csv file. Cannot include non-ASCII characters.
     
     """
-    class LinearRegressionDataset(Dataset):
-        def __init__(self, csv_file, x_headers, y_header):
-            self.dataset = pd.read_csv(csv_file)
-            self._set_headers(x_headers, y_header)
-            
-        def __len__(self):
-            return len(self.dataset)
-
-        def __getitem__(self, index):
-            return torch.tensor([self.dataset[x_header][index] for x_header in self.x_headers], dtype = torch.float32), \
-                    torch.tensor(self.dataset[self.y_header][index], dtype = torch.float32)
-
-        def _set_headers(self, x_headers, y_header):
-            self._check_headers(x_headers, y_header)
-        
-            self.x_headers = [self._get_header_value(feature) for feature in x_headers]
-            self.y_header = self._get_header_value(y_header)
-        
-        def _check_headers(self, x_headers, y_header):
-            for feature in x_headers:
-                if not isinstance(feature, str) and not isinstance(feature, int):
-                    raise HeaderError(f"x_header was of type {type(feature)}. Please verify input is a string or integer")
-            if not isinstance(y_header, str) and not isinstance(y_header, int):
-                raise HeaderError(f"y_header was of type {type(y_header)}. Please verify input is a string or integer")
-        
-        def _get_header_value(self, header):
-            if isinstance(header, str):
-                if header not in self.dataset.columns:
-                    raise HeaderError(f"header of value {header} cannot be found as a column name.")   
-                return header
-            
-            elif isinstance(header, int):
-                if header < 0 or x_headers >= len(self.dataset.columns):
-                    raise HeaderError(f"header of index {header} is out of range.")
-                return self.dataset.columns[header]
-            
     return LinearRegressionDataset(csv_file, x_headers, y_header)
 
 def create_classification_dataset(csv_file: str, class_header: Union[int, str]):
@@ -104,47 +146,6 @@ def create_classification_dataset(csv_file: str, class_header: Union[int, str]):
             class_header: class selected as labeling basis. Must be an integer or string. 
     
     """
-    class ClassificationDataset(Dataset):
-        def __init__(self, csv_file, class_header):
-            self.dataset = pd.read_csv(csv_file)
-            self._set_classes(class_header)
-            self._encode_string_values()
-            
-        def __len__(self):
-            return len(self.labels)
-        
-        def __getitem__(self, index):
-            return (torch.tensor(self.dataset.iloc[index, :], dtype = torch.float32),
-                    torch.tensor(self.labels[index], dtype = torch.float32))
-        
-        def _set_classes(self, class_header):
-            if isinstance(class_header, str):
-                if class_header not in self.dataset.columns:
-                    raise HeaderError("Incorrect header of str type. Please check header input value")
-                
-            elif isinstance(class_header, int):
-                if class_header > len(self.dataset) or class_header < 0:
-                    raise HeaderError("Incorrect header of int type. Please check header input value")
-                
-                class_header = self.dataset.columns[class_header]
-
-            else:
-                raise HeaderError(f"Incorrect header given with type {type(class_header)}. Header must be given as an integer or string")
-            
-            self.classes = self.dataset[class_header].unique()
-            label_encoder = preprocessing.LabelEncoder()
-            label_encoder.fit(self.classes)
-            self.labels = label_encoder.transform(self.dataset[class_header])
-            self.labels_to_classes = {i: label_encoder.inverse_transform([i])[0] for i in label_encoder.transform(self.classes)}
-            self.dataset = self.dataset.drop(class_header, axis = 1)
-    
-        def _encode_string_values(self):
-            for i in range(len(self.dataset.columns)):
-                column = self.dataset.iloc[:, i]
-                if not isinstance(column[0], int) and not isinstance(column[0], float):
-                    label_encoder = preprocessing.LabelEncoder()
-                    label_encoder.fit(column)
-                    self.dataset.iloc[:, i] = label_encoder.transform(column)
             
     return ClassificationDataset(csv_file, class_header)
 
