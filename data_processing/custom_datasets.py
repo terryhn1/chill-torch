@@ -42,7 +42,8 @@ class LinearRegressionDataset(Dataset):
 class ClassificationDataset(Dataset):
         def __init__(self, csv_file, class_header):
             self.data_frame = pd.read_csv(csv_file)
-            self._set_classes(class_header)
+            self.class_header = class_header
+            self._set_classes()
             self._encode_string_values()
             
         def __len__(self):
@@ -52,26 +53,26 @@ class ClassificationDataset(Dataset):
             return (torch.tensor(self.data_frame.iloc[index, :], dtype = torch.float32),
                     torch.tensor(self.labels[index], dtype = torch.float32))
         
-        def _set_classes(self, class_header):
-            if isinstance(class_header, str):
-                if class_header not in self.data_frame.columns:
+        def _set_classes(self):
+            if isinstance(self.class_header, str):
+                if self.class_header not in self.data_frame.columns:
                     raise HeaderError("Incorrect header of str type. Please check header input value")
                 
-            elif isinstance(class_header, int):
-                if class_header > len(self.data_frame) or class_header < 0:
+            elif isinstance(self.class_header, int):
+                if self.class_header > len(self.data_frame) or self.class_header < 0:
                     raise HeaderError("Incorrect header of int type. Please check header input value")
                 
-                class_header = self.data_frame.columns[class_header]
+                self.class_header = self.data_frame.columns[self.class_header]
 
             else:
-                raise HeaderError(f"Incorrect header given with type {type(class_header)}. Header must be given as an integer or string")
+                raise HeaderError(f"Incorrect header given with type {type(self.class_header)}. Header must be given as an integer or string")
             
-            self.classes = self.data_frame[class_header].unique()
+            self.classes = self.data_frame[self.class_header].unique()
             label_encoder = preprocessing.LabelEncoder()
             label_encoder.fit(self.classes)
-            self.labels = label_encoder.transform(self.data_frame[class_header])
+            self.labels = label_encoder.transform(self.data_frame[self.class_header])
             self.labels_to_classes = {i: label_encoder.inverse_transform([i])[0] for i in label_encoder.transform(self.classes)}
-            self.data_frame = self.data_frame.drop(class_header, axis = 1)
+            self.data_frame = self.data_frame.drop(self.class_header, axis = 1)
     
         def _encode_string_values(self):
             for i in range(len(self.dataset.columns)):
