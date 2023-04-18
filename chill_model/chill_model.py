@@ -61,8 +61,11 @@ class ChillModel:
                                   deterministic = deterministic,
                                   callbacks = callbacks)
 
-    def train(self):
-        self.trainer.fit(model = self.model, train_dataloaders = self.train_dataloader)
+    def train(self, valid_dataloader: None):
+        if valid_dataloader:
+            self.trainer.fit(self.model, self.train_dataloader, valid_dataloader)
+        else:
+            self.trainer.fit(model = self.model, train_dataloaders = self.train_dataloader)
     
     def test(self):
         self.trainer.test(dataloaders = self.test_dataloader)
