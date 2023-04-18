@@ -1,7 +1,7 @@
 # Example file for creating dataloaders
 import pandas as pd
 import os
-from custom_datasets import ClassificationDataset, ImageClassificationDataset, LinearRegressionDataset
+from custom_datasets import *
 from sklearn.model_selection import train_test_split
 from torch.utils.data import Dataset, Subset, DataLoader
 from typing import Dict, Union, List
