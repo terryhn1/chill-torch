@@ -3,6 +3,9 @@ import seaborn as sns
 
 class Recommendation:
     def __init__(self, **kwargs):
+        ''' Takes care of storing the information needed for graphing in a condensed manner.
+        Arguments will be used by the Visualizer. 
+        '''
         for key, val in kwargs.items():
             self.__dict__[key] = val
     
@@ -15,6 +18,16 @@ class Recommendation:
 
 class ChillRecommenderEngine:
     def __init__(self, dataset, dataset_type, decision_factor = 'corr'):
+        ''' Creates the ChillRecommenderEngine, which takes care of determining
+        what is necessary for the Visualizer for plotting by determining relavent graphs
+        and ranking them through an information relevance metric.
+
+        Args:
+            dataset: Full Dataset, made through DataLoading. Custom datasets can be wrapped if wanted.
+            dataset_type: A string, determining what kind of data the dataset is made from.
+            decision_factor: metric used to determine what type of relation graphs should be based from.
+        
+        '''
         
         self.dataset = dataset
         self.decision_factor = decision_factor
@@ -32,6 +45,13 @@ class ChillRecommenderEngine:
             self._activate_text_analysis(decision_factor)
     
     def _activate_numerical_analysis(self, decision_factor):
+        ''' When pure numbers are only being used, then numerical analysis must be done
+        to the dataset in order to gather relationships. Most plotting that comes from this data
+        is done using seaborn, which can plot mathematical relationship easily.
+
+        Args:
+            decision_factor: String to determine what type of relation graphs should be based from.
+        '''
         df = self.dataset.data_frame
         if isinstance(self.dataset, datasets.ClassificationDataset):
             df[self.dataset.class_header] = self.dataset.labels
@@ -61,6 +81,16 @@ class ChillRecommenderEngine:
         
 
     def _activate_image_analysis(self):
+        # Images take up a lot of data, so we should only select a random few from the dataset.
+
+        # After that, we want to:
+        # 1a. Make sure the images have been grayscaled(check for the amount of channels - should be 2)
+        # 1b. If not grayscaled, then have a transform on a random set
+        # 2. Use a AvgPool2D Layer on each image with a kernel of size 3.
+        # 3. Take the Cosine Similarity Score comparing each result to another.
+        # 4. Use a MaxPool2D Layer and repeat step 3 above for another result.
+        # 5. Similar to ViT, Flatten and add positional embedding. Then create a positional similarity metric
+        #    and score up per patch. Avg Pooling is done per patch, and score added to the position.
         pass
 
     def _activate_audio_analysis(self):
