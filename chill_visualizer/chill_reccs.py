@@ -37,20 +37,19 @@ class ChillRecommenderEngine:
             df[self.dataset.class_header] = self.dataset.labels
             if decision_factor == 'corr':
                 corr_values = df.corrwith(df[self.dataset.class_header]).sort_values(ascending = False)[1:]
+                names = corr_values.keys()
+
+                # TODO: Create a function that will be able to find the optimal x and y
 
                 # Recommended when the x and y are not labeled
-                self.recommendations.append(Recommendation(graph = sns.scatterplot,
-                                                           x = corr_values.keys()[0],
-                                                           y = corr_values.keys()[1],
-                                                           hue = self.dataset.class_header,
-                                                           figsize = self._get_fig_size(len(self.dataset))))
+                self._create_scatter_recommendation(x = names[0], y = names[1])
                 
                 # Recommended when the one data is labeled
-                self.recommendations.append(Recommendation(graph = sns.violinplot,
-                                                           x = corr_values.keys()[0],
-                                                           y = corr_values.keys()[1],
-                                                           hue = self.dataset.class_header,
-                                                           figsize = self._get_fig_size(len(self.dataset))))
+                self._create_violin_recommendation(x = names[0], y = names[1])
+                self._create_barplot_recommendation(x = names[0], y = names[1])
+                
+                # Recommended for relationship training. Takes the top five values
+                self._create_heatmap_recommendation(corr_names = names, k = 5)
                 
 
             df.drop(self.dataset.class_header, axis = 1, inplace = True)
@@ -70,6 +69,30 @@ class ChillRecommenderEngine:
 
     def _activate_text_analysis(self):
         pass
+
+    def _create_scatter_recommendation(self, x, y):
+        self.recommendations.append(Recommendation(graph = sns.scatterplot,
+                                                   x = x,
+                                                   y = y,
+                                                   hue = self.dataset.class_header))
+        
+    def _create_violin_recommendation(self, x, y):
+        self.recommendations.append(Recommendation(graph = sns.violinplot,
+                                                   x = x,
+                                                   y = y,
+                                                   hue = self.dataset.class_header,
+                                                   split = True))
+
+    def _create_barplot_recommendation(self, x, y):
+        self.recommendations.append(Recommendation(graph = sns.violinplot,
+                                                   x = x,
+                                                   y = y,
+                                                   hue = self.dataset.class_header,
+                                                   capsize = 0.2))
+    
+    def _create_heatmap_recommendation(self, corr_names, k):
+        self.recommendations.append(Recommendation(graph = sns.heatmap,
+                                                   data = self.dataset.data_frame[corr_names[:k]]))
 
     def _get_fig_size(self, dataset_size):
         level = 5* (dataset_size // 5000)
