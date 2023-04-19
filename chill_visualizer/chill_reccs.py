@@ -32,8 +32,8 @@ class ChillRecommenderEngine:
             self._activate_text_analysis(decision_factor)
     
     def _activate_numerical_analysis(self, decision_factor):
+        df = self.dataset.data_frame
         if isinstance(self.dataset, datasets.ClassificationDataset):
-            df = self.dataset.data_frame
             df[self.dataset.class_header] = self.dataset.labels
             if decision_factor == 'corr':
                 corr_values = df.corrwith(df[self.dataset.class_header]).sort_values(ascending = False)[1:]
@@ -43,6 +43,7 @@ class ChillRecommenderEngine:
 
                 # Recommended when the x and y are not labeled
                 self._create_scatter_recommendation(x = names[0], y = names[1])
+                self._create_kde_recommendation(x = names[0], y= names[0])
                 
                 # Recommended when the one data is labeled
                 self._create_violin_recommendation(x = names[0], y = names[1])
@@ -50,6 +51,7 @@ class ChillRecommenderEngine:
                 
                 # Recommended for relationship training. Takes the top five values
                 self._create_heatmap_recommendation(corr_names = names, k = 5)
+                self._create_clustermap_recommendation(corr_names = names, k = 5)
                 
 
             df.drop(self.dataset.class_header, axis = 1, inplace = True)
@@ -75,6 +77,12 @@ class ChillRecommenderEngine:
                                                    x = x,
                                                    y = y,
                                                    hue = self.dataset.class_header))
+    
+    def _create_kde_recommendation(self, x, y):
+        self.recommendations.append(Recommendation(graph = sns.jointplot,
+                                                   x = x,
+                                                   y = y,
+                                                   hue = self.dataset.class_header))
         
     def _create_violin_recommendation(self, x, y):
         self.recommendations.append(Recommendation(graph = sns.violinplot,
@@ -92,6 +100,10 @@ class ChillRecommenderEngine:
     
     def _create_heatmap_recommendation(self, corr_names, k):
         self.recommendations.append(Recommendation(graph = sns.heatmap,
+                                                   data = self.dataset.data_frame[corr_names[:k]]))
+
+    def _create_clustermap_recommendation(self, corr_names, k):
+        self.recommendations.append(Recommendation(graph = sns.clustermap,
                                                    data = self.dataset.data_frame[corr_names[:k]]))
 
     def _get_fig_size(self, dataset_size):
