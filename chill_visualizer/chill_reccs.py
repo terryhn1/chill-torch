@@ -162,70 +162,24 @@ class ChillRecommenderEngine:
          
         x_column, y_column = self.dataset[x], self.dataset[y]
 
-        # find the min and max boundaries
-        min_x = min_y = float("inf")
-        max_x = max_y = float("-inf")
-
-        for i in range(len(x_column)):
-            min_x = min(min_x, x_column[i])
-            max_x = max(max_x, x_column[i])
-            
-            min_y = min(min_y, y_column[i])
-            max_y = max(max_y, y_column[i])
+        min_x, min_y, max_x, max_y = self._find_min_max_boundaries(x_column, y_column)
         
         # We want to make our sections fit into a square
-        x_split = math.ceil((max_x - min_x) / 2)
-        y_split = math.ceil((max_y - min_y) / 2)
+        mid_x = math.ceil((max_x - min_x) / 2)
+        mid_y = math.ceil((max_y - min_y) / 2)
 
-        sections = {}
-        sections[(min_x, x_split, min_y, y_split)] = defaultdict(int)
-        sections[(min_x, x_split, y_split, max_y)] = defaultdict(int)
-        sections[(x_split, max_x, min_y, y_split)] = defaultdict(int)
-        sections[(x_split, max_x, y_split, max_y)] = defaultdict(int)
-        
-        # Scan through the dataset
+        boundaries = {'min_x': min_x, 'max_x': max_x,
+                      'min_y': min_y, 'max_y': max_y,
+                      'mid_x': mid_x, 'mid_y': mid_y}
+
+        sections = self._create_sections(boundaries)
         labels = self.dataset[self.dataset.class_header]
+        self._add_datapoints_to_sections(sections = sections,
+                                         boundaries = boundaries,
+                                         labels = labels)
 
-        #TODO: Find out the calculations to separate into even more sections
-
-        for i in range(len(x_column)):
-            # bottom-left section
-            if x_column[i] <= x_split and y_column[i] <= y_split:
-                sections[(min_x, x_split, min_y, y_split)][labels[i]] += 1
-                sections[(min_x, x_split, min_y, y_split)]['total'] += 1
-                
-            # top-left section
-            elif x_column[i] <= x_split and y_column[i] > y_split:
-                sections[(min_x, x_split, y_split, max_y)][labels[i]] += 1
-                sections[(min_x, x_split, y_split, max_y)]['total'] += 1
-
-            # bottom-right section
-            elif x_column[i] > x_split and y_column[i] <= y_split:
-                sections[(x_split, max_x, min_y, y_split)][labels[i]] += 1
-                sections[(x_split, max_x, min_y, y_split)]['total'] += 1
-
-            # top-right section
-            elif x_column[i] > x_split and y_column[i] > y_split:
-                sections[(x_split, max_x, y_split, max_y)][labels[i]] += 1
-                sections[(x_split, max_x, y_split, max_y)]['total'] += 1
-        
         # Finding the MP and IKP
-        isolated_cluster_proportion_rate = 0
-        for section in sections.values():
-            max_hue_population = 0
-            total_value = section['total']
-            if total_value == 0:
-                continue
-            for hue in self.dataset.classes:
-                hue_value = section[hue]
-                max_hue_population = max(max_hue_population, hue_value)
-            
-            isolated_cluster_proportion_rate += max_hue_population * (1/ len(self.dataset))
-        
-        return isolated_cluster_proportion_rate / len(self.dataset.classes)
-
-        
-
+        return self._find_ikp(sections)
 
     def _class_bin_relationship(self):
         x = ...
@@ -241,6 +195,70 @@ class ChillRecommenderEngine:
         x = ...
 
         return x
+    
+    def _find_min_max_boundaries(self, x_column, y_column):
+        min_x = min_y = float("inf")
+        max_x = max_y = float("-inf")
+
+        for i in range(len(x_column)):
+            min_x = min(min_x, x_column[i])
+            max_x = max(max_x, x_column[i])
+            
+            min_y = min(min_y, y_column[i])
+            max_y = max(max_y, y_column[i])
+        
+        return min_x, min_y, max_x, max_y
+
+    def _create_sections(self, min_x, max_x, min_y, max_y, x_split, y_split):
+        sections = {}
+        sections[(min_x, x_split, min_y, y_split)] = defaultdict(int)
+        sections[(min_x, x_split, y_split, max_y)] = defaultdict(int)
+        sections[(x_split, max_x, min_y, y_split)] = defaultdict(int)
+        sections[(x_split, max_x, y_split, max_y)] = defaultdict(int)
+
+        return sections
+
+    def _add_datapoints_to_sections(self, columns, sections, boundaries, labels):
+        x_col, y_col = columns[0], columns[1]
+        min_x, max_x = boundaries['min_x'], boundaries['max_x']
+        min_y, max_y = boundaries['min_y'], boundaries['max_y']
+        mid_x, mid_y = boundaries['mid_x'], boundaries['mid_y']
+        for i in range(len(x_col)):
+            # bottom-left section
+            if x_col[i] <= mid_x and y_col[i] <= mid_y:
+                sections[(min_x, mid_x, min_y, mid_y)][labels[i]] += 1
+                sections[(min_x, mid_x, min_y, mid_y)]['total'] += 1
+                
+            # top-left section
+            elif x_col[i] <= mid_x and y_col[i] > mid_y:
+                sections[(min_x, mid_x, mid_y, max_y)][labels[i]] += 1
+                sections[(min_x, mid_x, mid_y, max_y)]['total'] += 1
+
+            # bottom-right section
+            elif x_col[i] > mid_x and y_col[i] <= mid_y:
+                sections[(mid_x, max_x, min_y, mid_y)][labels[i]] += 1
+                sections[(mid_x, max_x, min_y, mid_y)]['total'] += 1
+
+            # top-right section
+            elif x_col[i] > mid_x and y_col[i] > mid_y:
+                sections[(mid_x, max_x, mid_y, max_y)][labels[i]] += 1
+                sections[(mid_x, max_x, mid_y, max_y)]['total'] += 1
+    
+    def _find_ikp(self, sections):
+        isolated_cluster_proportion_rate = 0
+        for section in sections.values():
+            max_hue_population = 0
+            total_value = section['total']
+            if total_value == 0:
+                continue
+            for hue in self.dataset.classes:
+                hue_value = section[hue]
+                max_hue_population = max(max_hue_population, hue_value)
+            
+            isolated_cluster_proportion_rate += max_hue_population / len(self.dataset)
+        
+        return isolated_cluster_proportion_rate / len(sections) # need to average it
+
 
     def _get_fig_size(self, dataset_size):
         level = 5* (dataset_size // 5000)
