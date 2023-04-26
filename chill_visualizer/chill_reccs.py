@@ -1,7 +1,9 @@
 import chill_torch.data_processing.custom_datasets as datasets
 import seaborn as sns
 import pandas as pd
+import math
 from typing import List
+from collections import defaultdict
 
 class Recommendation:
     def __init__(self, **kwargs):
@@ -65,21 +67,29 @@ class ChillRecommenderEngine:
                 optimal_x, optimal_y = self._get_optimal_label_and_relation(corr_map = corr_values, column_names = names)
 
                 # Recommended when the x and y are not labeled
-                if self._scatter_recommended(x = optimal_x, y = optimal_y):
+                iso_cluster_proportion_rate = self.isolated_clustering_proportion(x = optimal_x,
+                                                                                  y = optimal_y)
+                if 0 < iso_cluster_proportion_rate < 0.70:
                     self._create_scatter_recommendation(x = optimal_x, y = optimal_y)
-                elif self._kde_recommended(x = optimal_x, y = optimal_y):
+                else:
                     self._create_kde_recommendation(x = optimal_x, y= optimal_y)
                 
                 # Recommended when the one data is labeled
-                if self._violin_recommended(x = optimal_x, y = optimal_y):
+                population_distribution_rate = self._population_distribution(x = optimal_x,
+                                                                             y = optimal_y)
+                class_bin_relation_rate = self._class_bin_relationship(x = optimal_x,
+                                                                       y = optimal_y)
+                if population_distribution_rate > 0.5:
                     self._create_violin_recommendation(x = optimal_x, y = optimal_y)
-                elif self._barplot_recommended(x = optimal_x, y = optimal_y):
+                if class_bin_relation_rate > 0.5:
                     self._create_barplot_recommendation(x = optimal_x, y = optimal_y)
                 
                 # Recommended for relationship training. Takes the top five values
-                if self._heatmap_recommended():
+                correlation_classes_rate = self._correlation_classes(corr_names = names,
+                                                                     k = 5)
+                if 0 < correlation_classes_rate <  0.65:
                     self._create_heatmap_recommendation(corr_names = names, k = 5)
-                elif self._clustermap_recommended():
+                else:
                     self._create_clustermap_recommendation(corr_names = names, k = 5)
                 
 
@@ -148,30 +158,89 @@ class ChillRecommenderEngine:
         self.recommendations.append(Recommendation(graph = sns.clustermap,
                                                    data = self.dataset.data_frame[corr_names[:k]]))
     
-    def _scatter_recommended(self):
+    def _isolated_clustering_proportion(self, x: str, y: str):
+         
+        x_column, y_column = self.dataset[x], self.dataset[y]
 
+        # find the min and max boundaries
+        min_x = min_y = float("inf")
+        max_x = max_y = float("-inf")
+
+        for i in range(len(x_column)):
+            min_x = min(min_x, x_column[i])
+            max_x = max(max_x, x_column[i])
+            
+            min_y = min(min_y, y_column[i])
+            max_y = max(max_y, y_column[i])
+        
+        # We want to make our sections fit into a square
+        x_split = math.ceil((max_x - min_x) / 2)
+        y_split = math.ceil((max_y - min_y) / 2)
+
+        sections = {}
+        sections[(min_x, x_split, min_y, y_split)] = defaultdict(int)
+        sections[(min_x, x_split, y_split, max_y)] = defaultdict(int)
+        sections[(x_split, max_x, min_y, y_split)] = defaultdict(int)
+        sections[(x_split, max_x, y_split, max_y)] = defaultdict(int)
+        
+        # Scan through the dataset
+        labels = self.dataset[self.dataset.class_header]
+
+        #TODO: Find out the calculations to separate into even more sections
+
+        for i in range(len(x_column)):
+            # bottom-left section
+            if x_column[i] <= x_split and y_column[i] <= y_split:
+                sections[(min_x, x_split, min_y, y_split)][labels[i]] += 1
+                sections[(min_x, x_split, min_y, y_split)]['total'] += 1
+                
+            # top-left section
+            elif x_column[i] <= x_split and y_column[i] > y_split:
+                sections[(min_x, x_split, y_split, max_y)][labels[i]] += 1
+                sections[(min_x, x_split, y_split, max_y)]['total'] += 1
+
+            # bottom-right section
+            elif x_column[i] > x_split and y_column[i] <= y_split:
+                sections[(x_split, max_x, min_y, y_split)][labels[i]] += 1
+                sections[(x_split, max_x, min_y, y_split)]['total'] += 1
+
+            # top-right section
+            elif x_column[i] > x_split and y_column[i] > y_split:
+                sections[(x_split, max_x, y_split, max_y)][labels[i]] += 1
+                sections[(x_split, max_x, y_split, max_y)]['total'] += 1
+        
+        # Finding the MP and IKP
+        isolated_cluster_proportion_rate = 0
+        for section in sections.values():
+            max_hue_population = 0
+            total_value = section['total']
+            if total_value == 0:
+                continue
+            for hue in self.dataset.classes:
+                hue_value = section[hue]
+                max_hue_population = max(max_hue_population, hue_value)
+            
+            isolated_cluster_proportion_rate += max_hue_population * (1/ len(self.dataset))
+        
+        return isolated_cluster_proportion_rate / len(self.dataset.classes)
+
+        
+
+
+    def _class_bin_relationship(self):
         x = ...
 
-        return self._scale_recommendation_metric(x)
-
-    def _kde_recommended(self):
+        return x
+    
+    def _population_distribution(self):
         x = ...
-        return self._scale_recommendation_metric(x)
 
-    def _violin_recommended(self):
+        return x
+
+    def _correlation_classes(self):
         x = ...
-        return self.scale_recommendation_metric(x)
 
-    def _barplot_recommended(self):
-        x = ...
-        return self._scale_recommendation_metric(x)
-
-    def _heatmap_recommended(self):
-        x = ...
-        return self._scale_recommendation_metric(x)
-
-    def _scale_recommendation_metric(self, x):
-        pass
+        return x
 
     def _get_fig_size(self, dataset_size):
         level = 5* (dataset_size // 5000)
