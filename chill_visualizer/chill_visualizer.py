@@ -1,13 +1,23 @@
 from ..chill_model import ChillModel
-from chill_reccs import ChillVisualRecommender
+from chill_reccs import ChillRecommenderEngine, Recommendation
 import seaborn as sns
 import matplotlib.pyplot as plt
 import torch
 from torch.utils.data import Dataset
+from typing import List
 
 class ChillVisualizer:
     def __init__(self, model: ChillModel, dataset: Dataset, dataset_type: str, grid_theme_color: str = "whitegrid"):
+        ''' ChillVisualizer abstracts the amount of information needed to graph by allowing the VisualRecommender
+        to determine which graphs would be relevant for the user. Can visualize datasets along with setting up graphs
+        or using tensorboard to analyze prediction scores.
         
+        Args:
+            model: ChillModel that can be trained or not yet trained. This only matters for plotting predictions
+            dataset: Dataset created from data_loading.py or a Torch dataset.
+            dataset_type: A string that indicates the type of data the dataset is made out of.
+            grid_theme_color: Sets the matplotlib grid color. Set to white grid by default. 
+        '''
         self.model = model
         self.dataset = dataset
         self.dataset_type = dataset_type
@@ -21,8 +31,14 @@ class ChillVisualizer:
                 raise AttributeError(f"Attribute {key} cannot be assigned")
             self.__dict__[key] = value
 
-    def visualize(self, graph_requests = [], k = 1):
-        recc_engine = ChillVisualRecommender(self.dataset, self.dataset_type)
+    def visualize(self, graph_requests = List[Recommendation], k = 1):
+        ''' The main tool for graphing analysis plots. Does not include graphing prediction plots.
+
+        Args:
+            graph_requests: A list of Recommendations. Only to be used if override desired.
+            k: An integer indicating the amount of recommendations graphs to be sent back.
+        '''
+        recc_engine = ChillRecommenderEngine(self.dataset, self.dataset_type)
 
         if not graph_requests:
             reccs = recc_engine.get_top_k_graph_choices()
