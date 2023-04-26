@@ -181,8 +181,33 @@ class ChillRecommenderEngine:
         # Finding the MP and IKP
         return self._find_ikp(sections)
 
-    def _class_bin_relationship(self):
-        x = ...
+    def _class_bin_relationship(self, x: str, y: str):
+
+        #Initialize class bin hashtable
+        label_column = self.dataset[x]
+        unique_labels = label_column.unique()
+        discrete_column = self.dataset[y]
+        hue_column = self.dataset[self.dataset.class_header]
+
+        class_bin = {label: defaultdict(int) for label in unique_labels}
+        average_value_bin = {label: defaultdict(int) for label in unique_labels} 
+
+        #Scan through dataset
+        for i in range(len(label_column)):
+            class_bin[label_column[i]][hue_column[i]] += discrete_column[i]
+            average_value_bin[label_column[i]][hue_column[i]] += 1
+        
+        #Average it out
+
+        for label in class_bin:
+            for hue in average_value_bin:
+                average_value_bin[label][hue] = class_bin[label][hue] / average_value_bin[label][hue]
+        
+
+
+
+
+
 
         return x
     
@@ -251,17 +276,32 @@ class ChillRecommenderEngine:
     def _find_ikp(self, sections):
         isolated_cluster_proportion_rate = 0
         for section in sections.values():
-            max_hue_population = 0
+            max_candidate1 = max_candidate2 = 0
             total_value = section['total']
             if total_value == 0:
                 continue
             for hue in self.dataset.classes:
                 hue_value = section[hue]
-                max_hue_population = max(max_hue_population, hue_value)
+                population_rate = hue_value / total_value
+                if max_candidate1 == 0:
+                    max_candidate1 = population_rate
+                elif max_candidate2 == 0:
+                    max_candidate2 = population_rate
+                elif hue_value > max_candidate1:
+                    max_candidate2 = max_candidate1
+                    max_candidate1 = population_rate
+                elif hue_value > max_candidate2:
+                    max_candidate2 = population_rate
             
-            isolated_cluster_proportion_rate += max_hue_population / len(self.dataset)
+            differential = (max_candidate1 - max_candidate2) * 100 # convert to a percent
+            weight = total_value // len(self.dataset) 
+                
+            
+            isolated_cluster_proportion_rate += (differential * weight)
         
-        return isolated_cluster_proportion_rate / len(sections)
+        # Tanh is a good 0 to 1 function for this problem since it rewards higher numbers better
+        # while lower numbers are very low using a steady curve.
+        return math.tanh(0.0007 * isolated_cluster_proportion_rate**2)
 
     def _get_fig_size(self, dataset_size):
         level = 5* (dataset_size // 5000)
