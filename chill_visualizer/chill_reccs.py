@@ -1,5 +1,7 @@
 import chill_torch.data_processing.custom_datasets as datasets
 import seaborn as sns
+import pandas as pd
+from typing import List
 
 class Recommendation:
     def __init__(self, **kwargs):
@@ -60,18 +62,25 @@ class ChillRecommenderEngine:
                 names = corr_values.keys()
 
                 # TODO: Create a function that will be able to find the optimal x and y
+                optimal_x, optimal_y = self._get_optimal_label_and_relation(corr_map = corr_values, column_names = names)
 
                 # Recommended when the x and y are not labeled
-                self._create_scatter_recommendation(x = names[0], y = names[1])
-                self._create_kde_recommendation(x = names[0], y= names[0])
+                if self._scatter_recommended(x = optimal_x, y = optimal_y):
+                    self._create_scatter_recommendation(x = optimal_x, y = optimal_y)
+                elif self._kde_recommended(x = optimal_x, y = optimal_y):
+                    self._create_kde_recommendation(x = optimal_x, y= optimal_y)
                 
                 # Recommended when the one data is labeled
-                self._create_violin_recommendation(x = names[0], y = names[1])
-                self._create_barplot_recommendation(x = names[0], y = names[1])
+                if self._violin_recommended(x = optimal_x, y = optimal_y):
+                    self._create_violin_recommendation(x = optimal_x, y = optimal_y)
+                elif self._barplot_recommended(x = optimal_x, y = optimal_y):
+                    self._create_barplot_recommendation(x = optimal_x, y = optimal_y)
                 
                 # Recommended for relationship training. Takes the top five values
-                self._create_heatmap_recommendation(corr_names = names, k = 5)
-                self._create_clustermap_recommendation(corr_names = names, k = 5)
+                if self._heatmap_recommended():
+                    self._create_heatmap_recommendation(corr_names = names, k = 5)
+                elif self._clustermap_recommended():
+                    self._create_clustermap_recommendation(corr_names = names, k = 5)
                 
 
             df.drop(self.dataset.class_header, axis = 1, inplace = True)
@@ -102,39 +111,67 @@ class ChillRecommenderEngine:
     def _activate_text_analysis(self):
         pass
 
-    def _create_scatter_recommendation(self, x, y):
+    def _get_optimal_label_and_relation(self, corr_map: pd.DataFrame, col_names: List[str]):
+        pass
+
+    def _create_scatter_recommendation(self, x: str, y: str):
         self.recommendations.append(Recommendation(graph = sns.scatterplot,
                                                    x = x,
                                                    y = y,
                                                    hue = self.dataset.class_header))
     
-    def _create_kde_recommendation(self, x, y):
+    def _create_kde_recommendation(self, x: str, y: str):
         self.recommendations.append(Recommendation(graph = sns.jointplot,
                                                    x = x,
                                                    y = y,
                                                    hue = self.dataset.class_header))
         
-    def _create_violin_recommendation(self, x, y):
+    def _create_violin_recommendation(self, x: str, y: str):
         self.recommendations.append(Recommendation(graph = sns.violinplot,
                                                    x = x,
                                                    y = y,
                                                    hue = self.dataset.class_header,
                                                    split = True))
 
-    def _create_barplot_recommendation(self, x, y):
+    def _create_barplot_recommendation(self, x: str, y: str):
         self.recommendations.append(Recommendation(graph = sns.violinplot,
                                                    x = x,
                                                    y = y,
                                                    hue = self.dataset.class_header,
                                                    capsize = 0.2))
     
-    def _create_heatmap_recommendation(self, corr_names, k):
+    def _create_heatmap_recommendation(self, corr_names: List[str], k: int):
         self.recommendations.append(Recommendation(graph = sns.heatmap,
                                                    data = self.dataset.data_frame[corr_names[:k]]))
 
-    def _create_clustermap_recommendation(self, corr_names, k):
+    def _create_clustermap_recommendation(self, corr_names: List[str], k: int):
         self.recommendations.append(Recommendation(graph = sns.clustermap,
                                                    data = self.dataset.data_frame[corr_names[:k]]))
+    
+    def _scatter_recommended(self):
+
+        x = ...
+
+        return self._scale_recommendation_metric(x)
+
+    def _kde_recommended(self):
+        x = ...
+        return self._scale_recommendation_metric(x)
+
+    def _violin_recommended(self):
+        x = ...
+        return self.scale_recommendation_metric(x)
+
+    def _barplot_recommended(self):
+        x = ...
+        return self._scale_recommendation_metric(x)
+
+    def _heatmap_recommended(self):
+        x = ...
+        return self._scale_recommendation_metric(x)
+
+    def _scale_recommendation_metric(self, x):
+        pass
 
     def _get_fig_size(self, dataset_size):
         level = 5* (dataset_size // 5000)
