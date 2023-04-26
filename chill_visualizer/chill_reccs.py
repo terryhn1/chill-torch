@@ -209,12 +209,16 @@ class ChillRecommenderEngine:
         
         return min_x, min_y, max_x, max_y
 
-    def _create_sections(self, min_x, max_x, min_y, max_y, x_split, y_split):
+    def _create_sections(self, boundaries):
+        min_x, max_x = boundaries['min_x'], boundaries['max_x']
+        min_y, max_y = boundaries['min_y'], boundaries['max_y']
+        mid_x, mid_y = boundaries['mid_x'], boundaries['mid_y']
+
         sections = {}
-        sections[(min_x, x_split, min_y, y_split)] = defaultdict(int)
-        sections[(min_x, x_split, y_split, max_y)] = defaultdict(int)
-        sections[(x_split, max_x, min_y, y_split)] = defaultdict(int)
-        sections[(x_split, max_x, y_split, max_y)] = defaultdict(int)
+        sections[(min_x, mid_x, min_y, mid_y)] = defaultdict(int)
+        sections[(min_x, mid_x, mid_y, max_y)] = defaultdict(int)
+        sections[(mid_x, max_x, min_y, mid_y)] = defaultdict(int)
+        sections[(mid_x, max_x, mid_y, max_y)] = defaultdict(int)
 
         return sections
 
@@ -257,8 +261,7 @@ class ChillRecommenderEngine:
             
             isolated_cluster_proportion_rate += max_hue_population / len(self.dataset)
         
-        return isolated_cluster_proportion_rate / len(sections) # need to average it
-
+        return isolated_cluster_proportion_rate / len(sections)
 
     def _get_fig_size(self, dataset_size):
         level = 5* (dataset_size // 5000)
