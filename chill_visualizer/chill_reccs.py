@@ -1,6 +1,7 @@
 import chill_torch.data_processing.custom_datasets as datasets
 import seaborn as sns
 import pandas as pd
+import numpy as np
 import math
 from typing import List
 from collections import defaultdict
@@ -185,31 +186,72 @@ class ChillRecommenderEngine:
 
         #Initialize class bin hashtable
         label_column = self.dataset[x]
-        unique_labels = label_column.unique()
         discrete_column = self.dataset[y]
         hue_column = self.dataset[self.dataset.class_header]
+        unique_labels = label_column.unique()
 
-        class_bin = {label: defaultdict(int) for label in unique_labels}
+        hue_bin = {label: defaultdict(int) for label in unique_labels}
+        hue_relation_bin = defaultdict(list)
+        
         average_value_bin = {label: defaultdict(int) for label in unique_labels} 
 
         #Scan through dataset
         for i in range(len(label_column)):
-            class_bin[label_column[i]][hue_column[i]] += discrete_column[i]
+            hue_bin[label_column[i]][hue_column[i]] += discrete_column[i]
             average_value_bin[label_column[i]][hue_column[i]] += 1
         
         #Average it out
-
-        for label in class_bin:
+        label_similarity_score = 0
+        for label in hue_bin:
             for hue in average_value_bin:
-                average_value_bin[label][hue] = class_bin[label][hue] / average_value_bin[label][hue]
+                average_value_bin[label][hue] = hue_bin[label][hue] / average_value_bin[label][hue]
+                hue_relation_bin[hue].append(average_value_bin[label][hue])
+
+                min_max_hue = str(hue) + 'min_max'
+                if not hue_relation_bin[min_max_hue]:
+                    hue_relation_bin[min_max_hue] = [float('inf'), float('-inf')]
+                else:
+                    hue_relation_bin[min_max_hue][0] = min(hue_relation_bin[min_max_hue][0], hue_relation_bin[hue][-1])
+                    hue_relation_bin[min_max_hue][1] = max(hue_relation_bin[min_max_hue][1], hue_relation_bin[hue][-1])
+                
+            # we can clear the hue_bin since it's not being used anymore
+            hue_bin[label].clear()
+        
+            average_differential = 0
+            combination_count = 0
+            #Comparing the averages allow us to get a pseudo-similarity score.
+            #If the similarity score is high, there's not much information gain
+
+            # Hue is usually very low as predictions becomes much harder with many classes.
+            # Therefore, this loop won't take much computation power
+            for hue in average_value_bin:
+                for compared_hue in average_value_bin:
+                    if hue != compared_hue:
+                        average_differential += abs(average_value_bin[label][hue] - average_value_bin[label][compared_hue])
+                        combination_count += 1
+                    
+            label_similarity_score += round(average_differential / combination_count, 5) 
+
+        # find out the hue relation score
+        hue_relation_score = 0
+        for hue in hue_relation_bin:
+            if type(hue) == str:
+                continue
+            average_val = np.mean(hue_relation_bin[hue])
+            bound_diff = hue_relation_bin[(str(hue) + 'min_max')][1] - hue_relation_bin[(str(hue) + 'min_max')][0]
+            confidence_interval = 0.4
+            range_val = bound_diff * confidence_interval
+            min_interval, max_interval = average_val - range_val, average_val + range_val
+
+            count = 0
+            for score in hue_relation_bin[hue]:
+                if min_interval <= score <= max_interval:
+                     count += 1
+                
+            hue_similarity_score += round(count / len(hue_relation_bin[hue]), 5)
         
 
-
-
-
-
-
-        return x
+        return label_similarity_score + hue_relation_score
     
     def _population_distribution(self):
         x = ...
@@ -293,7 +335,7 @@ class ChillRecommenderEngine:
                 elif hue_value > max_candidate2:
                     max_candidate2 = population_rate
             
-            differential = (max_candidate1 - max_candidate2) * 100 # convert to a percent
+            differential = (max_candidate1 - max_candidate2) * 100
             weight = total_value // len(self.dataset) 
                 
             
