@@ -5,7 +5,7 @@ from collections import defaultdict
 from torch.utils.data import Dataset
 from typing import List, Dict, Tuple
 
-def get_optimal_label_and_relation(corr_info: pd.DataFrame,
+def get_optimal_x_and_y(corr_info: pd.DataFrame,
                                    corr_column_names: pd.Series,
                                    df: pd.DataFrame,
                                    corr_threshold: float = 0.6,

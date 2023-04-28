@@ -64,9 +64,9 @@ class ChillRecommenderEngine:
                 names = corr_values.keys()
 
                 # TODO: What if we wanted to deal with both unlabeled and labeled rather than just selecting one
-                optimal_x, optimal_y, is_labeled = get_optimal_label_and_relation(corr_info = corr_values,
-                                                                                  column_names = names,
-                                                                                  df = df)
+                optimal_x, optimal_y, is_labeled = get_optimal_x_and_y(corr_info = corr_values,
+                                                                       column_names = names,
+                                                                       df = df)
 
                 # Recommended when the x and y are not labeled
                 if not is_labeled:
