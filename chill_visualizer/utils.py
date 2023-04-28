@@ -160,13 +160,10 @@ def find_ikp(sections: Dict[tuple, defaultdict],
         
         isolated_cluster_proportion_rate += (differential * weight)
         
-    # Tanh is a good 0 to 1 function for this problem since it rewards higher numbers better
-    # while lower numbers are very low using a steady curve.
     return math.tanh((isolated_cluster_proportion_rate**2) * decline_rate)
 
 def class_bin_relationship(x: str, y: str, dataset: Dataset) -> float:
 
-    #Initialization Step
     label_column = dataset[x]
     discrete_column = dataset[y]
     hue_column = dataset[dataset.class_header]
@@ -185,8 +182,6 @@ def class_bin_relationship(x: str, y: str, dataset: Dataset) -> float:
 
     hue_similarity_score = find_hue_similarity_score(hue_relation_bin)
 
-    # Graphs are better when there are changes that can be depicted in the graph.
-    # Therefore, the higher the similarity, the less information gain 
     return label_similarity_score + hue_similarity_score
 
 def find_label_similarity_score(hue_bin: Dict[int, defaultdict],
@@ -196,19 +191,15 @@ def find_label_similarity_score(hue_bin: Dict[int, defaultdict],
     label_similarity_score = 0
     for label in hue_bin:
 
-        # set total values for hue_bins
         set_total_hue_bin(hue_bin = hue_bin,
                           average_value_bin= average_value_bin,
                           hue_relation_bin = hue_relation_bin,
                           label = label)
             
-        # we can clear the hue_bin since it's not being used anymore
         hue_bin[label].clear()
         average_differential = 0
         combination_count = 0
 
-        #Comparing the averages allow us to get a pseudo-similarity score.
-        #If the similarity score is high, there's not much information gain
         for hue in average_value_bin:
             for compared_hue in average_value_bin:
                 if hue != compared_hue:
