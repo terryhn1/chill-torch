@@ -170,7 +170,7 @@ def find_ikp(sections: Dict[tuple, defaultdict],
         
     return math.tanh((isolated_cluster_proportion_rate**2) * decline_rate)
 
-def class_bin_relationship(x: str, y: str, dataset: Dataset) -> float:
+def class_bin_relationship(x: str, y: str, dataset: Dataset, decline_rate: float = 0.005) -> float:
     """
         The class bin relationship of a set of datapoints determines whether the datapoints
         are suitable to use for a bar plot. For more information gain, a barplot is good
@@ -184,6 +184,7 @@ def class_bin_relationship(x: str, y: str, dataset: Dataset) -> float:
             x: A string leading to a labeled column, owning less than 20 discrete values.
             y: A string leading to a column with many discrete values.
             dataset: ClassificationDataset created from data_loading.
+            decline_rate: Float dictating the rate of slope decline for tanh probability. 
         
         Returns: Float from range 0.0 to 1.0 representing the class bin relationship score. 
     """
@@ -206,7 +207,7 @@ def class_bin_relationship(x: str, y: str, dataset: Dataset) -> float:
 
     hue_similarity_score = find_hue_similarity_score(hue_relation_bin)
 
-    return label_similarity_score + hue_similarity_score
+    return -math.tanh(((label_similarity_score + hue_similarity_score) ** 2) * decline_rate) + 1
 
 def find_label_similarity_score(hue_bin: Dict[int, defaultdict],
                                 average_value_bin: Dict[int: defaultdict],
