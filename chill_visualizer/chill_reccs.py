@@ -63,36 +63,37 @@ class ChillRecommenderEngine:
                 corr_values = df.corrwith(df[self.dataset.class_header]).sort_values(ascending = False)[1:]
                 names = corr_values.keys()
 
-                # TODO: Create a function that will be able to find the optimal x and y
-                optimal_x, optimal_y = self._get_optimal_label_and_relation(corr_map = corr_values, column_names = names)
+                # TODO: What if we wanted to deal with both unlabeled and labeled rather than just selecting one
+                optimal_x, optimal_y, is_labeled = get_optimal_label_and_relation(corr_info = corr_values,
+                                                                                  column_names = names,
+                                                                                  df = df)
 
                 # Recommended when the x and y are not labeled
-                iso_cluster_proportion_rate = self.isolated_clustering_proportion(x = optimal_x,
-                                                                                  y = optimal_y)
-                if 0 < iso_cluster_proportion_rate < 0.70:
-                    self._create_scatter_recommendation(x = optimal_x, y = optimal_y)
-                else:
-                    self._create_kde_recommendation(x = optimal_x, y= optimal_y)
+                if not is_labeled:
+                    iso_cluster_proportion_rate = isolated_clustering_proportion(x = optimal_x,
+                                                                                 y = optimal_y)
+                    if iso_cluster_proportion_rate < 0.60:
+                        self._create_scatter_recommendation(x = optimal_x, y = optimal_y)
+                    else:
+                        self._create_kde_recommendation(x = optimal_x, y= optimal_y)
                 
                 # Recommended when the one data is labeled
-                population_distribution_rate = self._population_distribution(x = optimal_x,
-                                                                             y = optimal_y)
-                class_bin_relation_rate = self._class_bin_relationship(x = optimal_x,
-                                                                       y = optimal_y)
-                if population_distribution_rate > 0.5:
-                    self._create_violin_recommendation(x = optimal_x, y = optimal_y)
-                if class_bin_relation_rate > 0.5:
-                    self._create_barplot_recommendation(x = optimal_x, y = optimal_y)
+                if is_labeled:
+                    class_bin_relation_rate = class_bin_relationship(x = optimal_x,
+                                                                     y = optimal_y)
+                
+                    if class_bin_relation_rate > 0.5:
+                        self._create_barplot_recommendation(x = optimal_x, y = optimal_y)
                 
                 # Recommended for relationship training. Takes the top five values
-                correlation_classes_rate = self._correlation_classes(corr_names = names,
-                                                                     k = 5)
+                correlation_classes_rate = correlation_classes(corr_names = names,
+                                                               k = 5)
+                
                 if 0 < correlation_classes_rate <  0.65:
                     self._create_heatmap_recommendation(corr_names = names, k = 5)
                 else:
                     self._create_clustermap_recommendation(corr_names = names, k = 5)
                 
-
             df.drop(self.dataset.class_header, axis = 1, inplace = True)
 
         elif isinstance(self.dataset, datasets.LinearRegressionDataset):
