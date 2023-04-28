@@ -19,12 +19,13 @@ def isolated_clustering_proportion(x: str, y: str, dataset: Dataset) -> float:
             x: A string to a column of discrete values.
             y: A string to a column of discrete values.
             dataset: a ClassificationDataset created from data_loading.
+        
+        Returns: A float from the range of 0 to 1 representing the isolated clustering proportion.
     """
     x_column, y_column = dataset[x], dataset[y]
 
     min_x, min_y, max_x, max_y = find_min_max_boundaries(x_column, y_column)
     
-    # We want to make our sections fit into a square
     mid_x = math.ceil((max_x - min_x) / 2)
     mid_y = math.ceil((max_y - min_y) / 2)
 
@@ -39,7 +40,6 @@ def isolated_clustering_proportion(x: str, y: str, dataset: Dataset) -> float:
                                boundaries = boundaries,
                                labels = labels)
 
-    # Finding the MP and IKP
     return find_ikp(sections, dataset)
 
 def find_min_max_boundaries(x_column: pd.Series, y_column: pd.Series) -> Tuple[float]:
@@ -50,6 +50,8 @@ def find_min_max_boundaries(x_column: pd.Series, y_column: pd.Series) -> Tuple[f
         Args:
             x_column: pd.Series that contains datapoints for a discrete column.
             y_column: pd.Series that contains datapoints for a discrete column.
+        
+        Returns: Tuple containing the maximum and minimum x and y boundaries.
     """
     min_x = min_y = float("inf")
     max_x = max_y = float("-inf")
@@ -69,7 +71,9 @@ def create_sections(boundaries: Dict[str, float]) -> Dict[tuple, defaultdict]:
         each datapoint to a certain area.
 
         Args:
-            boundaries: Dictionary that contains the float values that determine the boundary boxes in the k x k matrix. 
+            boundaries: Dictionary that contains the float values that determine the boundary boxes in the k x k matrix.
+
+        Returns: A dictionary representing the k x k matrix. 
     """
     min_x, max_x = boundaries['min_x'], boundaries['max_x']
     min_y, max_y = boundaries['min_y'], boundaries['max_y']
@@ -96,7 +100,9 @@ def add_datapoints_to_sections(columns: List[pd.Series],
             columns: List containing the columns of discrete values.
             sections: A dictionary representing a k x k matrix with boundary boxes.
             boundaries: A dictionary containing float boundaries for the k x k matrix.
-            labels: pd.Series containing the hue color, which is the classification label. 
+            labels: pd.Series containing the hue color, which is the classification label.
+        
+        Returns: None
     """
     x_col, y_col = columns[0], columns[1]
     min_x, max_x = boundaries['min_x'], boundaries['max_x']
@@ -131,9 +137,11 @@ def find_ikp(sections: Dict[tuple, defaultdict],
        takes the difference as the determining factor as to whether the section can be identified
        with a single hue color.
 
-       Args:
+        Args:
             sections: A dictionary containing a representation of the k x k matrix.
             dataset: A ClassificationDataset built from data_loading.
+
+        Returns: a float representing the isolated clustering proportion.
     """
     isolated_cluster_proportion_rate = 0
     for section in sections.values():
@@ -163,6 +171,22 @@ def find_ikp(sections: Dict[tuple, defaultdict],
     return math.tanh((isolated_cluster_proportion_rate**2) * decline_rate)
 
 def class_bin_relationship(x: str, y: str, dataset: Dataset) -> float:
+    """
+        The class bin relationship of a set of datapoints determines whether the datapoints
+        are suitable to use for a bar plot. For more information gain, a barplot is good
+        in the case that there is a significance difference between the discrete values of
+        a labeled column or there is a significance difference between the discrete values seen at
+        each labeled column for a hue. This allows us to identify whether the datapoints experience
+        dependency, and therefore further correlation. The label similarity score and the hue
+        similarity score is taken in order to determine the class bin relationship.
+
+        Args:
+            x: A string leading to a labeled column, owning less than 20 discrete values.
+            y: A string leading to a column with many discrete values.
+            dataset: ClassificationDataset created from data_loading.
+        
+        Returns: Float from range 0.0 to 1.0 representing the class bin relationship score. 
+    """
 
     label_column = dataset[x]
     discrete_column = dataset[y]
@@ -188,6 +212,19 @@ def find_label_similarity_score(hue_bin: Dict[int, defaultdict],
                                 average_value_bin: Dict[int: defaultdict],
                                 hue_relation_bin: Dict[any, list],
                                 precision: int = 5) -> float:
+    """
+        Label similarity score is defined as the difference between hues on
+        the same label/class. A high similarity score means that there is almost
+        no difference, resulting in less information gain.
+
+        Args:
+            hue_bin: Separates the datapoints into [label, hue] and sums the discrete values.
+            average_value_bin: Separates the datapoints into [label, hue] and averages the hue_bin.
+            hue_relation_bin: Separates datapoints into hues encountered.
+            precision: Float indicating the amount of decimals to round the similarity score up to.
+        
+            Returns: Float representing the label similarity score.
+    """
     label_similarity_score = 0
     for label in hue_bin:
 
@@ -214,6 +251,18 @@ def set_total_hue_bin(hue_bin: Dict[int, defaultdict],
                       average_value_bin: Dict[int, defaultdict],
                       hue_relation_bin: Dict[any, list],
                       label: int) -> None:
+    """
+        Adds averaged values for future computations along with setting the minimum and maximum
+        candidates for average value hues.
+
+        Args:
+            hue_bin: Separates the datapoints into [label, hue] and sums the discrete values.
+            average_value_bin: Separates the datapoints into [label, hue] and averages the hue_bin.
+            hue_relation_bin: Separates datapoints into hues encountered.
+            label: Integer representing the label or the x_column value.
+        
+        Returns: None.
+    """
     for hue in average_value_bin:
         average_value_bin[label][hue] = hue_bin[label][hue] / average_value_bin[label][hue]
         hue_relation_bin[hue].append(average_value_bin[label][hue])
@@ -226,6 +275,16 @@ def set_total_hue_bin(hue_bin: Dict[int, defaultdict],
             hue_relation_bin[min_max_hue][1] = max(hue_relation_bin[min_max_hue][1], hue_relation_bin[hue][-1])
 
 def find_hue_similarity_score(hue_relation_bin: Dict[any, list]) -> float:
+    """
+        Hue similarity score is defined as the similarity between hues across different
+        labels. A higher score indicates that there is slight or no changes across the labels
+        and therefore is not a significant factor for graphing.
+
+        Args:
+            hue_relation_bin: Separates datapoints into hues encountered.
+
+        Returns: float representing the hue similarity score.
+    """
     hue_similarity_score = 0
     for hue in hue_relation_bin:
         if type(hue) == str:
