@@ -5,6 +5,96 @@ from collections import defaultdict
 from torch.utils.data import Dataset
 from typing import List, Dict, Tuple
 
+def get_optimal_label_and_relation(corr_info: pd.DataFrame,
+                                   corr_column_names: pd.Series,
+                                   df: pd.DataFrame,
+                                   corr_threshold: float = 0.6,
+                                   label_limit: int = 20,
+                                   decay_rate: float = 0.5,
+                                   decay_limit: float = 0.1):
+
+    """
+        Finds the optimal label and relation by differentiating purely discrete data
+        and data that has been labelled out of k possible columns, dependent on the correlation
+        to the class header. Top candidates are chosen and further correlations are taken into account
+        to find the most optimal for graphing. 
+    """
+
+    while corr_threshold > decay_limit:
+
+        candidates_x, candidates_y = find_possible_candidates(df = df,
+                                                        corr_info = corr_info,
+                                                        corr_threshold = corr_threshold,
+                                                        corr_column_names= corr_column_names,
+                                                        label_limit= label_limit)    
+        if candidates_x:
+            x, y, is_labeled = select_for_labeled_data(df = df,
+                                                       candidates_x = candidates_x,
+                                                       candidates_y = candidates_y,
+                                                       corr_threshold = corr_threshold)
+            if x:
+                return x, y, is_labeled
+        elif candidates_y:
+            x, y, is_labeled = select_from_candidates_y(df = df,
+                                                        candidates_y = candidates_y,
+                                                        corr_threshold = corr_threshold)
+            if x:
+                return x, y, is_labeled
+        
+        # Exponential decay is used in this case to progressively decrease
+        # the threshold until a certain limit in order to find suitable candidates
+        corr_threshold *= decay_rate
+    
+    return None, None, False
+ 
+
+
+def find_possible_candidates(df: pd.DataFrame,
+                            corr_info: pd.DataFrame,
+                            corr_threshold: float,
+                            corr_column_names: pd.Series,
+                            label_limit: float) -> Tuple(list):
+    candidates_x, candidates_y = [], []
+
+    for i in range(len(corr_info)):
+        if corr_info[i] < corr_threshold:
+            break
+        
+        unique_values = set()
+        for j in range(len(df[corr_column_names[i]])):
+            unique_values.add(df[corr_column_names[i]][j])
+        
+        if len(unique_values) < label_limit:
+            candidates_x.append(corr_column_names[i])
+        else:
+            candidates_y.append(corr_column_names[i])
+    
+    return candidates_x, candidates_y
+
+def select_for_labeled_data(df, candidates_x, candidates_y, corr_threshold):
+    for x in candidates_x:
+        new_corr = df.corrwith(df[x]).sort_values(ascending = False)[1:]
+        new_names = new_corr.keys()
+        
+        for candidate in range(len(new_names)):
+            if new_names[candidate] in candidates_y and new_corr[candidate] >= corr_threshold:
+                return x, new_names[candidate], True
+        
+    return None, None, True
+
+
+def select_from_candidates_y(df: pd.DataFrame, candidates_y: list, corr_threshold: float):
+    unique_candidates = set(candidates_y)
+    for y in candidates_y:
+        new_corr = df.corrwith(df[y]).sort_values(ascending = False)[1:]
+        new_names = new_corr.keys()
+
+        for candidate in range(len(new_names)):
+            if new_names[candidate] in unique_candidates and new_corr[candidate] >= corr_threshold:
+                return y, new_names[candidate], False
+    
+    return None, None, False
+
 def isolated_clustering_proportion(x: str, y: str, dataset: Dataset) -> float:
     """
         The isolated clustering proportion, or the IKP, is a metric that determines whether
@@ -304,11 +394,6 @@ def find_hue_similarity_score(hue_relation_bin: Dict[any, list]) -> float:
         hue_similarity_score += round(count / len(hue_relation_bin[hue]), 5)
     
     return hue_similarity_score
-
-def population_distribution():
-    x = ...
-
-    return x
 
 def correlation_classes():
     x = ...
